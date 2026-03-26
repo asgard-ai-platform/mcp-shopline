@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "shopline": {
+      "command": "python",
+      "args": ["mcp_server.py"],
+      "cwd": "${PWD}",
+      "env": {
+        "PYTHONPATH": "${PWD}",
+        "SHOPLINE_API_TOKEN": "${SHOPLINE_API_TOKEN}"
+      }
+    }
+  }
+}
