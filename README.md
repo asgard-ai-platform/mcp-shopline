@@ -1,5 +1,7 @@
 # Shopline API MCP Server
 
+[繁體中文](README.zh-TW.md)
+
 An open-source [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server that wraps the [Shopline Open API](https://open-api.docs.shoplineapp.com/docs/getting-started) into 19 AI-callable tools for e-commerce data analysis.
 
 Built for [Claude Code](https://claude.ai/code), Claude Cowork, and any MCP-compatible AI client. Enables AI agents to query orders, products, inventory, customer behavior, and promotions from Shopline stores through natural language.
@@ -29,9 +31,8 @@ You need a valid Shopline API access token from a Shopline merchant account. Ref
 ### 1. Clone and Configure
 
 ```bash
-git clone https://github.com/WJWang/projext-shopline-api-tool.git
-cd projext-shopline-api-tool
-git checkout shopline-mcp-general
+git clone https://github.com/asgard-ai-platform/shopline-api-mcp-server.git
+cd shopline-api-mcp-server
 
 cp .env.example .env
 # Edit .env with your Shopline API access token
