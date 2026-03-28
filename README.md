@@ -230,7 +230,6 @@ python scripts/auth/test_connection.py
 - [ ] `get_slow_movers` — identify products with high inventory but low sales for clearance planning
 - [ ] Support for multiple Shopline stores (multi-token)
 - [ ] Add webhook support for real-time order notifications
-- [x] ~~Publish as a standalone MCP package~~ — [available on PyPI](https://pypi.org/project/mcp-shopline/)
 
 ## Contributing
 
