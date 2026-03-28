@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tools.tool_registry import get_tool_schemas, execute_tool
 
 
-SERVER_NAME = "shopline-api-tools"
-SERVER_VERSION = "1.0.0"
+SERVER_NAME = "mcp-shopline"
+SERVER_VERSION = "0.1.0"
 PROTOCOL_VERSION = "2024-11-05"
 
 

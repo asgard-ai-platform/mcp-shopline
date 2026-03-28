@@ -1,4 +1,4 @@
-# Shopline API MCP Server
+# MCP Shopline
 
 開源的 [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) 伺服器，將 [Shopline Open API](https://open-api.docs.shoplineapp.com/docs/getting-started) 封裝為 19 個 AI 可調用的電商數據分析工具。
 
@@ -29,8 +29,8 @@
 ### 1. 下載與設定
 
 ```bash
-git clone https://github.com/asgard-ai-platform/shopline-api-mcp-server.git
-cd shopline-api-mcp-server
+git clone https://github.com/asgard-ai-platform/mcp-shopline.git
+cd mcp-shopline
 
 cp .env.example .env
 # 編輯 .env，填入您的 Shopline API Access Token
@@ -127,7 +127,7 @@ python tests/test_all_tools.py
 ## 專案結構
 
 ```
-shopline-api-mcp-server/
+mcp-shopline/
 ├── mcp_server.py              # MCP 伺服器（stdio JSON-RPC 2.0）
 ├── .mcp.json                  # Claude Code MCP 自動偵測設定
 ├── .env.example               # 環境變數範本

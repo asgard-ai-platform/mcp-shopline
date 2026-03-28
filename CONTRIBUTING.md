@@ -1,4 +1,4 @@
-# Contributing to Shopline API MCP Server
+# Contributing to MCP Shopline
 
 Thank you for your interest in contributing! This guide will help you get started.
 

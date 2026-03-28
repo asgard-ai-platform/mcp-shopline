@@ -5,3 +5,7 @@ __pycache__/
 *.tmp
 .venv/
 venv/
+dist/
+*.egg-info
+.claude/*.md
+.claude/*.local.*

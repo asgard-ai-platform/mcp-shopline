@@ -1,5 +1,5 @@
 [project]
-name = "shopline-api-mcp-server"
+name = "mcp-shopline"
 version = "0.1.0"
 description = "MCP server wrapping the Shopline Open API into 19 AI Agent-callable tools for e-commerce data analysis"
 readme = "README.md"
@@ -12,7 +12,6 @@ keywords = ["mcp", "shopline", "e-commerce", "ai-agent", "claude"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -25,13 +24,19 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/asgard-ai-platform/shopline-api-mcp-server"
-Repository = "https://github.com/asgard-ai-platform/shopline-api-mcp-server"
-Issues = "https://github.com/asgard-ai-platform/shopline-api-mcp-server/issues"
+Homepage = "https://github.com/asgard-ai-platform/mcp-shopline"
+Repository = "https://github.com/asgard-ai-platform/mcp-shopline"
+Issues = "https://github.com/asgard-ai-platform/mcp-shopline/issues"
 
 [build-system]
 requires = ["setuptools>=68.0"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+shopline-mcp = "mcp_server:main"
+
+[tool.setuptools]
+py-modules = ["mcp_server"]
 
 [tool.setuptools.packages.find]
 include = ["config*", "tools*"]

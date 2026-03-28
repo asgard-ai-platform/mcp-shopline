@@ -1,4 +1,4 @@
-# Shopline API MCP Server
+# MCP Shopline
 
 [繁體中文](README.zh-TW.md)
 
@@ -31,8 +31,8 @@ You need a valid Shopline API access token from a Shopline merchant account. Ref
 ### 1. Clone and Configure
 
 ```bash
-git clone https://github.com/asgard-ai-platform/shopline-api-mcp-server.git
-cd shopline-api-mcp-server
+git clone https://github.com/asgard-ai-platform/mcp-shopline.git
+cd mcp-shopline
 
 cp .env.example .env
 # Edit .env with your Shopline API access token
