@@ -230,7 +230,6 @@ python scripts/auth/test_connection.py
 - [ ] `get_slow_movers` — 識別高庫存低銷售商品，輔助清倉決策
 - [ ] 支援多商店（多 Token）
 - [ ] 新增 Webhook 即時訂單通知
-- [x] ~~發佈為獨立 MCP 套件（pip 安裝）~~ — [已上架 PyPI](https://pypi.org/project/mcp-shopline/)
 
 ## 貢獻
 
