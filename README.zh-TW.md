@@ -1,5 +1,11 @@
 # MCP Shopline
 
+[![PyPI version](https://img.shields.io/pypi/v/mcp-shopline)](https://pypi.org/project/mcp-shopline/)
+[![Python versions](https://img.shields.io/pypi/pyversions/mcp-shopline)](https://pypi.org/project/mcp-shopline/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[English](README.md)
+
 開源的 [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) 伺服器，將 [Shopline Open API](https://open-api.docs.shoplineapp.com/docs/getting-started) 封裝為 19 個 AI 可調用的電商數據分析工具。
 
 專為 [Claude Code](https://claude.ai/code)、Claude Cowork 及任何支援 MCP 協定的 AI 客戶端打造。讓 AI Agent 能夠透過自然語言查詢 Shopline 商店的訂單、商品、庫存、客戶行為與促銷活動。
@@ -26,42 +32,71 @@
 
 ## 快速開始
 
-### 1. 下載與設定
+### 安裝
 
 ```bash
-git clone https://github.com/asgard-ai-platform/mcp-shopline.git
-cd mcp-shopline
+pip install mcp-shopline
+```
 
-cp .env.example .env
-# 編輯 .env，填入您的 Shopline API Access Token
+或使用 uvx（免安裝）：
+
+```bash
+uvx --from mcp-shopline shopline-mcp
+```
+
+設定 API Token：
+
+```bash
 export SHOPLINE_API_TOKEN=your_token_here
 ```
 
-### 2. 安裝依賴
+### 搭配 Claude Code 使用
+
+透過 Claude CLI 加入伺服器：
 
 ```bash
-pip install requests
+claude mcp add --transport stdio shopline -- shopline-mcp
 ```
 
-### 3. 搭配 Claude Code 使用
-
-在 Claude Code 中開啟此專案目錄，`.mcp.json` 會自動被偵測，19 個工具立即可用。
-
-或手動加入：
+或直接帶入環境變數：
 
 ```bash
-claude mcp add --transport stdio --scope project shopline \
-  -- python /path/to/mcp_server.py
+claude mcp add --transport stdio shopline -e SHOPLINE_API_TOKEN=your_token_here -- shopline-mcp
 ```
 
-### 4. 驗證
+若您將專案 clone 至本機，Claude Code 會自動偵測 `.mcp.json`，19 個工具立即可用。
 
-```bash
-# 測試 API 連線
-python scripts/auth/test_connection.py
+### 搭配 Claude Desktop 使用
 
-# 執行全部 19 個工具測試（會連線 live API）
-python tests/test_all_tools.py
+在 `claude_desktop_config.json` 中加入以下設定：
+
+```json
+{
+  "mcpServers": {
+    "shopline": {
+      "command": "shopline-mcp",
+      "env": {
+        "SHOPLINE_API_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+```
+
+或使用 uvx：
+
+```json
+{
+  "mcpServers": {
+    "shopline": {
+      "command": "uvx",
+      "args": ["--from", "mcp-shopline", "shopline-mcp"],
+      "env": {
+        "SHOPLINE_API_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
 ```
 
 ---
@@ -146,13 +181,6 @@ mcp-shopline/
     └── inspect_data_structure.py  # API 回應結構探查
 ```
 
-## 新增工具
-
-1. 定義 schema dict（Claude API `tool_use` 格式，含 `name`、`description`、`input_schema`）
-2. 使用 `base_tool.py` 的 `api_get` / `fetch_all_pages` 實作函數
-3. 加入對應模組的工具列表（如 `ORDER_TOOLS`）
-4. 自動透過 `tool_registry.py` 和 `mcp_server.py` 註冊，無需額外設定
-
 ## API 限制
 
 以下為 Shopline Open API 的限制，已由工具內部自動處理：
@@ -162,6 +190,34 @@ mcp-shopline/
 - **訂單狀態**：線上訂單用 `confirmed`、POS 用 `completed`，工具預設兩者皆包含
 - **通路識別**：`created_from` = `"shop"`（線上）/ `"pos"`（門市）；門市名稱從 `order.channel.created_by_channel_name` 取得
 - **幣別**：所有金額以 TWD（新台幣）表示，透過 `money_to_float()` 轉為 float
+
+---
+
+## 開發
+
+### 從原始碼安裝
+
+```bash
+git clone https://github.com/asgard-ai-platform/mcp-shopline.git
+cd mcp-shopline
+pip install -e .
+```
+
+### 執行測試
+
+```bash
+python tests/test_all_tools.py
+python scripts/auth/test_connection.py
+```
+
+### 新增工具
+
+1. 定義 schema dict（Claude API `tool_use` 格式，含 `name`、`description`、`input_schema`）
+2. 使用 `base_tool.py` 的 `api_get` / `fetch_all_pages` 實作函數
+3. 加入對應模組的工具列表（如 `ORDER_TOOLS`）
+4. 自動透過 `tool_registry.py` 和 `mcp_server.py` 註冊，無需額外設定
+
+---
 
 ## 開發計畫
 
@@ -174,7 +230,6 @@ mcp-shopline/
 - [ ] `get_slow_movers` — 識別高庫存低銷售商品，輔助清倉決策
 - [ ] 支援多商店（多 Token）
 - [ ] 新增 Webhook 即時訂單通知
-- [ ] 發佈為獨立 MCP 套件（pip 安裝）
 
 ## 貢獻
 

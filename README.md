@@ -1,5 +1,9 @@
 # MCP Shopline
 
+[![PyPI version](https://img.shields.io/pypi/v/mcp-shopline)](https://pypi.org/project/mcp-shopline/)
+[![Python versions](https://img.shields.io/pypi/pyversions/mcp-shopline)](https://pypi.org/project/mcp-shopline/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 [繁體中文](README.zh-TW.md)
 
 An open-source [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server that wraps the [Shopline Open API](https://open-api.docs.shoplineapp.com/docs/getting-started) into 19 AI-callable tools for e-commerce data analysis.
@@ -28,42 +32,71 @@ You need a valid Shopline API access token from a Shopline merchant account. Ref
 
 ## Quick Start
 
-### 1. Clone and Configure
+### Install
 
 ```bash
-git clone https://github.com/asgard-ai-platform/mcp-shopline.git
-cd mcp-shopline
+pip install mcp-shopline
+```
 
-cp .env.example .env
-# Edit .env with your Shopline API access token
+Or use uvx (no install needed):
+
+```bash
+uvx --from mcp-shopline shopline-mcp
+```
+
+Set your API token:
+
+```bash
 export SHOPLINE_API_TOKEN=your_token_here
 ```
 
-### 2. Install Dependencies
+### Use with Claude Code
+
+Add the server via the Claude CLI:
 
 ```bash
-pip install requests
+claude mcp add --transport stdio shopline -- shopline-mcp
 ```
 
-### 3. Use with Claude Code
-
-Open this project directory in Claude Code. The `.mcp.json` config will be auto-detected, and all 19 tools become available immediately.
-
-Or add manually:
+Or with the environment variable inline:
 
 ```bash
-claude mcp add --transport stdio --scope project shopline \
-  -- python /path/to/mcp_server.py
+claude mcp add --transport stdio shopline -e SHOPLINE_API_TOKEN=your_token_here -- shopline-mcp
 ```
 
-### 4. Verify
+If you clone the repo locally, the `.mcp.json` config will be auto-detected by Claude Code and all 19 tools become available immediately.
 
-```bash
-# Test API connection
-python scripts/auth/test_connection.py
+### Use with Claude Desktop
 
-# Run all 19 tool tests (hits live API)
-python tests/test_all_tools.py
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "shopline": {
+      "command": "shopline-mcp",
+      "env": {
+        "SHOPLINE_API_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+```
+
+Or with uvx:
+
+```json
+{
+  "mcpServers": {
+    "shopline": {
+      "command": "uvx",
+      "args": ["--from", "mcp-shopline", "shopline-mcp"],
+      "env": {
+        "SHOPLINE_API_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
 ```
 
 ---
@@ -129,7 +162,7 @@ Based on [Shopline Open API v1](https://open-api.docs.shoplineapp.com):
 ## Project Structure
 
 ```
-shopline-mcp/
+mcp-shopline/
 ├── mcp_server.py              # MCP Server (stdio JSON-RPC 2.0)
 ├── .mcp.json                  # Claude Code MCP auto-discovery config
 ├── .env.example               # Environment variable template
@@ -148,13 +181,6 @@ shopline-mcp/
     └── inspect_data_structure.py  # API response structure explorer
 ```
 
-## Adding a New Tool
-
-1. Define a schema dict (Claude API `tool_use` format with `name`, `description`, `input_schema`)
-2. Implement the function using `api_get` / `fetch_all_pages` from `base_tool.py`
-3. Append `{"schema": ..., "function": ...}` to the module's tool list
-4. Auto-registered via `tool_registry.py` and `mcp_server.py` — no extra wiring needed
-
 ## API Constraints
 
 These are Shopline Open API limitations handled internally by the tools:
@@ -164,6 +190,34 @@ These are Shopline Open API limitations handled internally by the tools:
 - **Order status**: online orders use `confirmed`, POS uses `completed` — tools include both by default
 - **Channel identification**: `created_from` = `"shop"` (online) / `"pos"` (retail); store name from `order.channel.created_by_channel_name`
 - **Currency**: all monetary values in TWD (New Taiwan Dollar), returned as float via `money_to_float()`
+
+---
+
+## Development
+
+### Setup from Source
+
+```bash
+git clone https://github.com/asgard-ai-platform/mcp-shopline.git
+cd mcp-shopline
+pip install -e .
+```
+
+### Run Tests
+
+```bash
+python tests/test_all_tools.py
+python scripts/auth/test_connection.py
+```
+
+### Adding a New Tool
+
+1. Define a schema dict (Claude API `tool_use` format with `name`, `description`, `input_schema`)
+2. Implement the function using `api_get` / `fetch_all_pages` from `base_tool.py`
+3. Append `{"schema": ..., "function": ...}` to the module's tool list
+4. Auto-registered via `tool_registry.py` and `mcp_server.py` — no extra wiring needed
+
+---
 
 ## Roadmap
 
@@ -176,7 +230,6 @@ These are Shopline Open API limitations handled internally by the tools:
 - [ ] `get_slow_movers` — identify products with high inventory but low sales for clearance planning
 - [ ] Support for multiple Shopline stores (multi-token)
 - [ ] Add webhook support for real-time order notifications
-- [ ] Publish as a standalone MCP package (pip installable)
 
 ## Contributing
 
