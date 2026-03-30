@@ -110,6 +110,25 @@ if __name__ == "__main__":
         "get_order_detail", get_order_detail, order_id=oid
     )
 
+    # 驗證 query_orders → get_order_detail 的完整串接流程
+    # (regression: query_orders 曾未回傳 id，導致只能傳 order_number 給 detail，API 回 410)
+    print(f"\n{'─' * 50}")
+    print(f"🔧 query_orders → get_order_detail 串接測試")
+    try:
+        qr = query_orders(start_date="2026-03-01", end_date="2026-03-30", max_results=1)
+        order = qr["orders"][0]
+        assert "id" in order and order["id"], "query_orders 回傳缺少 id 欄位"
+        detail = get_order_detail(order_id=order["id"])
+        assert detail["order_number"] == order["order_number"], \
+            f"order_number 不一致: {detail['order_number']} != {order['order_number']}"
+        print(f"   id: {order['id']} → order_number: {detail['order_number']}")
+        print(f"   ✅ OK")
+        results["query_orders→get_order_detail"] = True
+    except Exception as e:
+        print(f"   ❌ Exception: {e}")
+        traceback.print_exc()
+        results["query_orders→get_order_detail"] = False
+
     # --- 商品類 ---
     results["get_product_list"] = run_test(
         "get_product_list", get_product_list, max_results=5
