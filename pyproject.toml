@@ -1,6 +1,6 @@
 [project]
 name = "mcp-shopline"
-version = "0.1.0"
+version = "0.2.0"
 description = "MCP server wrapping the Shopline Open API into 19 AI Agent-callable tools for e-commerce data analysis"
 readme = "README.md"
 license = "MIT"
@@ -34,9 +34,6 @@ build-backend = "setuptools.build_meta"
 
 [project.scripts]
 mcp-shopline = "mcp_server:main"
-
-[tool.uv.sources]
-mcp = { path = "../python-sdk", editable = true }
 
 [tool.setuptools]
 py-modules = ["mcp_server", "app"]
