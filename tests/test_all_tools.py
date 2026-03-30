@@ -8,16 +8,34 @@ import traceback
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from tools.tool_registry import execute_tool, list_tools
+# 匯入工具模組以觸發 @mcp.tool() 裝飾器的副作用（工具註冊）
+import tools.order_tools      # noqa: F401
+import tools.product_tools    # noqa: F401
+import tools.analytics_tools  # noqa: F401
+
+from tools.order_tools import (
+    query_orders, get_sales_summary, get_top_products,
+    get_sales_trend, get_channel_comparison, get_order_detail, get_refund_summary
+)
+from tools.product_tools import (
+    get_product_list, get_product_variants, get_inventory_overview,
+    get_low_stock_alerts, get_warehouses, get_stock_by_warehouse
+)
+from tools.analytics_tools import (
+    get_rfm_analysis, get_repurchase_analysis, get_customer_geo_analysis,
+    get_inventory_turnover, get_category_sales, get_promotion_analysis
+)
+from app import mcp
+import asyncio
 
 
-def run_test(name, **kwargs):
+def run_test(name, fn, **kwargs):
     """執行一個 Tool 並印出結果摘要"""
     print(f"\n{'─' * 50}")
     print(f"🔧 {name}")
     print(f"   params: {kwargs}")
     try:
-        result = execute_tool(name, **kwargs)
+        result = fn(**kwargs)
         if "error" in result and result["error"]:
             print(f"   ❌ Error: {result['error']}")
             return False
@@ -48,38 +66,39 @@ if __name__ == "__main__":
     print("Shopline API Tools 端對端測試")
     print("=" * 60)
 
-    tools = list_tools()
-    print(f"共 {len(tools)} 個 Tools 待測試\n")
+    # 確認工具數量
+    tools_list = asyncio.run(mcp.list_tools())
+    print(f"共 {len(tools_list)} 個 Tools 待測試\n")
 
     results = {}
 
     # --- 訂單類 ---
     results["query_orders"] = run_test(
-        "query_orders",
+        "query_orders", query_orders,
         start_date="2026-03-01", end_date="2026-03-19",
         status="completed", channel="all", max_results=5
     )
 
     results["get_sales_summary"] = run_test(
-        "get_sales_summary",
+        "get_sales_summary", get_sales_summary,
         start_date="2026-03-01", end_date="2026-03-19",
         status="completed", channel="all"
     )
 
     results["get_top_products"] = run_test(
-        "get_top_products",
+        "get_top_products", get_top_products,
         start_date="2026-03-01", end_date="2026-03-19",
         top_n=5, sort_by="revenue"
     )
 
     results["get_sales_trend"] = run_test(
-        "get_sales_trend",
+        "get_sales_trend", get_sales_trend,
         start_date="2026-03-01", end_date="2026-03-19",
         granularity="daily"
     )
 
     results["get_channel_comparison"] = run_test(
-        "get_channel_comparison",
+        "get_channel_comparison", get_channel_comparison,
         start_date="2026-03-01", end_date="2026-03-19"
     )
 
@@ -88,12 +107,12 @@ if __name__ == "__main__":
     first_order = api_get("orders", params={"per_page": 1, "status": "completed"})
     oid = first_order["items"][0]["id"]
     results["get_order_detail"] = run_test(
-        "get_order_detail", order_id=oid
+        "get_order_detail", get_order_detail, order_id=oid
     )
 
     # --- 商品類 ---
     results["get_product_list"] = run_test(
-        "get_product_list", max_results=5
+        "get_product_list", get_product_list, max_results=5
     )
 
     # 取第一個有 variations 的商品
@@ -106,63 +125,63 @@ if __name__ == "__main__":
             break
     if prod_with_vars:
         results["get_product_variants"] = run_test(
-            "get_product_variants", product_id=prod_with_vars
+            "get_product_variants", get_product_variants, product_id=prod_with_vars
         )
     else:
         print("\n⚠️ 無可測試的商品變體")
         results["get_product_variants"] = False
 
     results["get_inventory_overview"] = run_test(
-        "get_inventory_overview"
+        "get_inventory_overview", get_inventory_overview
     )
 
     results["get_low_stock_alerts"] = run_test(
-        "get_low_stock_alerts", threshold=3
+        "get_low_stock_alerts", get_low_stock_alerts, threshold=3
     )
 
     results["get_warehouses"] = run_test(
-        "get_warehouses"
+        "get_warehouses", get_warehouses
     )
 
     # --- 分析類 ---
     results["get_rfm_analysis"] = run_test(
-        "get_rfm_analysis",
+        "get_rfm_analysis", get_rfm_analysis,
         start_date="2026-01-01", end_date="2026-03-19"
     )
 
     results["get_repurchase_analysis"] = run_test(
-        "get_repurchase_analysis",
+        "get_repurchase_analysis", get_repurchase_analysis,
         start_date="2026-01-01", end_date="2026-03-19"
     )
 
     results["get_customer_geo_analysis"] = run_test(
-        "get_customer_geo_analysis",
+        "get_customer_geo_analysis", get_customer_geo_analysis,
         start_date="2026-03-01", end_date="2026-03-19"
     )
 
     results["get_inventory_turnover"] = run_test(
-        "get_inventory_turnover",
+        "get_inventory_turnover", get_inventory_turnover,
         start_date="2026-03-01", end_date="2026-03-19"
     )
 
     # --- 新增 Tools (Combo 用) ---
     results["get_refund_summary"] = run_test(
-        "get_refund_summary",
+        "get_refund_summary", get_refund_summary,
         start_date="2026-03-01", end_date="2026-03-24"
     )
 
     results["get_stock_by_warehouse"] = run_test(
-        "get_stock_by_warehouse",
+        "get_stock_by_warehouse", get_stock_by_warehouse,
         product_id=prod_with_vars  # 用前面找到的有 variations 的商品
     )
 
     results["get_category_sales"] = run_test(
-        "get_category_sales",
+        "get_category_sales", get_category_sales,
         start_date="2026-03-01", end_date="2026-03-19"
     )
 
     results["get_promotion_analysis"] = run_test(
-        "get_promotion_analysis",
+        "get_promotion_analysis", get_promotion_analysis,
         status="all"
     )
 

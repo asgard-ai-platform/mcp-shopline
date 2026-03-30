@@ -5,6 +5,10 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from typing import Optional, Literal
+from pydantic import Field
+
+from app import mcp
 from tools.base_tool import (
     api_get, fetch_all_pages, fetch_all_pages_by_date_segments,
     money_to_float, get_translation, ShoplineAPIError
@@ -20,35 +24,16 @@ VALID_ORDER_STATUSES = {"completed", "confirmed"}
 # ============================================================
 # Tool 1: query_orders — 依條件查詢訂單
 # ============================================================
-QUERY_ORDERS_SCHEMA = {
-    "name": "query_orders",
-    "description": "依時間區間、訂單狀態、通路來源查詢訂單列表。回傳精簡的訂單摘要。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "start_date": {"type": "string", "description": "起始日期 YYYY-MM-DD"},
-            "end_date": {"type": "string", "description": "結束日期 YYYY-MM-DD"},
-            "status": {
-                "type": "string",
-                "enum": ["pending", "confirmed", "completed", "cancelled"],
-                "description": "訂單狀態篩選"
-            },
-            "channel": {
-                "type": "string",
-                "enum": ["online", "pos", "all"],
-                "description": "通路篩選: online=線上官網, pos=實體門市, all=全部",
-                "default": "all"
-            },
-            "store_name": {"type": "string", "description": "門市名稱篩選（如：松菸誠品、新光A11）"},
-            "max_results": {"type": "integer", "description": "最多回傳筆數", "default": 100}
-        },
-        "required": ["start_date", "end_date"]
-    }
-}
-
-
-def query_orders(start_date, end_date, status=None, channel="all", store_name=None, max_results=100):
-    """查詢訂單"""
+@mcp.tool()
+def query_orders(
+    start_date: str = Field(description="起始日期 YYYY-MM-DD"),
+    end_date: str = Field(description="結束日期 YYYY-MM-DD"),
+    status: Optional[Literal["pending", "confirmed", "completed", "cancelled"]] = Field(default=None, description="訂單狀態篩選"),
+    channel: Literal["online", "pos", "all"] = Field(default="all", description="通路篩選: online=線上官網, pos=實體門市, all=全部"),
+    store_name: Optional[str] = Field(default=None, description="門市名稱篩選（如：松菸誠品、新光A11）"),
+    max_results: int = Field(default=100, description="最多回傳筆數"),
+) -> dict:
+    """依時間區間、訂單狀態、通路來源查詢訂單列表。回傳精簡的訂單摘要。"""
     params = {
         "created_after": f"{start_date}T00:00:00Z",
         "created_before": f"{end_date}T23:59:59Z",
@@ -107,25 +92,15 @@ def query_orders(start_date, end_date, status=None, channel="all", store_name=No
 # ============================================================
 # Tool 2: get_sales_summary — 銷售摘要
 # ============================================================
-GET_SALES_SUMMARY_SCHEMA = {
-    "name": "get_sales_summary",
-    "description": "取得指定時間區間的銷售摘要：營業額、訂單數、客單價、件單價、折扣總額等核心指標。支援依通路/門市篩選。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "start_date": {"type": "string", "description": "起始日期 YYYY-MM-DD"},
-            "end_date": {"type": "string", "description": "結束日期 YYYY-MM-DD"},
-            "status": {"type": "string", "description": "訂單狀態", "default": "completed"},
-            "channel": {"type": "string", "enum": ["online", "pos", "all"], "default": "all"},
-            "store_name": {"type": "string", "description": "門市名稱篩選"},
-        },
-        "required": ["start_date", "end_date"]
-    }
-}
-
-
-def get_sales_summary(start_date, end_date, status="completed", channel="all", store_name=None):
-    """計算銷售摘要"""
+@mcp.tool()
+def get_sales_summary(
+    start_date: str = Field(description="起始日期 YYYY-MM-DD"),
+    end_date: str = Field(description="結束日期 YYYY-MM-DD"),
+    status: str = Field(default="completed", description="訂單狀態"),
+    channel: Literal["online", "pos", "all"] = Field(default="all", description="通路篩選"),
+    store_name: Optional[str] = Field(default=None, description="門市名稱篩選"),
+) -> dict:
+    """取得指定時間區間的銷售摘要：營業額、訂單數、客單價、件單價、折扣總額等核心指標。支援依通路/門市篩選。"""
     params = {
         "created_after": f"{start_date}T00:00:00Z",
         "created_before": f"{end_date}T23:59:59Z",
@@ -217,25 +192,15 @@ def get_sales_summary(start_date, end_date, status="completed", channel="all", s
 # ============================================================
 # Tool 3: get_top_products — 熱銷/滯銷商品排行
 # ============================================================
-GET_TOP_PRODUCTS_SCHEMA = {
-    "name": "get_top_products",
-    "description": "取得指定時間區間的商品銷售排行榜（依銷量或營業額排序），或滯銷商品清單。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "start_date": {"type": "string", "description": "起始日期 YYYY-MM-DD"},
-            "end_date": {"type": "string", "description": "結束日期 YYYY-MM-DD"},
-            "top_n": {"type": "integer", "description": "顯示前 N 名", "default": 20},
-            "sort_by": {"type": "string", "enum": ["quantity", "revenue"], "default": "revenue"},
-            "channel": {"type": "string", "enum": ["online", "pos", "all"], "default": "all"},
-        },
-        "required": ["start_date", "end_date"]
-    }
-}
-
-
-def get_top_products(start_date, end_date, top_n=20, sort_by="revenue", channel="all"):
-    """取得熱銷商品排行"""
+@mcp.tool()
+def get_top_products(
+    start_date: str = Field(description="起始日期 YYYY-MM-DD"),
+    end_date: str = Field(description="結束日期 YYYY-MM-DD"),
+    top_n: int = Field(default=20, description="顯示前 N 名"),
+    sort_by: Literal["quantity", "revenue"] = Field(default="revenue", description="排序依據"),
+    channel: Literal["online", "pos", "all"] = Field(default="all", description="通路篩選"),
+) -> dict:
+    """取得指定時間區間的商品銷售排行榜（依銷量或營業額排序），或滯銷商品清單。"""
     params = {
         "created_after": f"{start_date}T00:00:00Z",
         "created_before": f"{end_date}T23:59:59Z",
@@ -297,28 +262,14 @@ def get_top_products(start_date, end_date, top_n=20, sort_by="revenue", channel=
 # ============================================================
 # Tool 4: get_sales_trend — 銷售趨勢
 # ============================================================
-GET_SALES_TREND_SCHEMA = {
-    "name": "get_sales_trend",
-    "description": "取得銷售趨勢數據，支援每日/每週/每月粒度，可用於繪製趨勢圖。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "start_date": {"type": "string", "description": "起始日期 YYYY-MM-DD"},
-            "end_date": {"type": "string", "description": "結束日期 YYYY-MM-DD"},
-            "granularity": {
-                "type": "string",
-                "enum": ["daily", "weekly", "monthly"],
-                "default": "daily"
-            },
-            "channel": {"type": "string", "enum": ["online", "pos", "all"], "default": "all"},
-        },
-        "required": ["start_date", "end_date"]
-    }
-}
-
-
-def get_sales_trend(start_date, end_date, granularity="daily", channel="all"):
-    """取得銷售趨勢"""
+@mcp.tool()
+def get_sales_trend(
+    start_date: str = Field(description="起始日期 YYYY-MM-DD"),
+    end_date: str = Field(description="結束日期 YYYY-MM-DD"),
+    granularity: Literal["daily", "weekly", "monthly"] = Field(default="daily", description="時間粒度"),
+    channel: Literal["online", "pos", "all"] = Field(default="all", description="通路篩選"),
+) -> dict:
+    """取得銷售趨勢數據，支援每日/每週/每月粒度，可用於繪製趨勢圖。"""
     params = {
         "created_after": f"{start_date}T00:00:00Z",
         "created_before": f"{end_date}T23:59:59Z",
@@ -376,22 +327,12 @@ def get_sales_trend(start_date, end_date, granularity="daily", channel="all"):
 # ============================================================
 # Tool 5: get_channel_comparison — 門市比較
 # ============================================================
-GET_CHANNEL_COMPARISON_SCHEMA = {
-    "name": "get_channel_comparison",
-    "description": "比較各門市/通路的同期業績：營業額、訂單數、客單價等。支援線上 vs 門市，或門市之間的比較。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "start_date": {"type": "string", "description": "起始日期 YYYY-MM-DD"},
-            "end_date": {"type": "string", "description": "結束日期 YYYY-MM-DD"},
-        },
-        "required": ["start_date", "end_date"]
-    }
-}
-
-
-def get_channel_comparison(start_date, end_date):
-    """各通路/門市比較"""
+@mcp.tool()
+def get_channel_comparison(
+    start_date: str = Field(description="起始日期 YYYY-MM-DD"),
+    end_date: str = Field(description="結束日期 YYYY-MM-DD"),
+) -> dict:
+    """比較各門市/通路的同期業績：營業額、訂單數、客單價等。支援線上 vs 門市，或門市之間的比較。"""
     params = {
         "created_after": f"{start_date}T00:00:00Z",
         "created_before": f"{end_date}T23:59:59Z",
@@ -444,21 +385,11 @@ def get_channel_comparison(start_date, end_date):
 # ============================================================
 # Tool 6: get_order_detail — 訂單明細
 # ============================================================
-GET_ORDER_DETAIL_SCHEMA = {
-    "name": "get_order_detail",
-    "description": "取得單筆訂單的完整資訊，包含商品明細、付款、物流、折扣等。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "order_id": {"type": "string", "description": "訂單 ID"},
-        },
-        "required": ["order_id"]
-    }
-}
-
-
-def get_order_detail(order_id):
-    """取得訂單明細"""
+@mcp.tool()
+def get_order_detail(
+    order_id: str = Field(description="訂單 ID"),
+) -> dict:
+    """取得單筆訂單的完整資訊，包含商品明細、付款、物流、折扣等。"""
     data = api_get("order_detail", path_params={"order_id": order_id})
 
     o = data if "order_number" in data else data.get("item", data)
@@ -518,22 +449,12 @@ def get_order_detail(order_id):
 # ============================================================
 # Tool 7: get_refund_summary — 退貨退款統計
 # ============================================================
-GET_REFUND_SUMMARY_SCHEMA = {
-    "name": "get_refund_summary",
-    "description": "取得指定時間區間的退貨退款統計：退款金額、退貨筆數、退貨率、退貨商品明細。支援計算淨營收。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "start_date": {"type": "string", "description": "起始日期 YYYY-MM-DD"},
-            "end_date": {"type": "string", "description": "結束日期 YYYY-MM-DD"},
-        },
-        "required": ["start_date", "end_date"]
-    }
-}
-
-
-def get_refund_summary(start_date, end_date):
-    """退貨退款統計"""
+@mcp.tool()
+def get_refund_summary(
+    start_date: str = Field(description="起始日期 YYYY-MM-DD"),
+    end_date: str = Field(description="結束日期 YYYY-MM-DD"),
+) -> dict:
+    """取得指定時間區間的退貨退款統計：退款金額、退貨筆數、退貨率、退貨商品明細。支援計算淨營收。"""
     params = {
         "created_after": f"{start_date}T00:00:00Z",
         "created_before": f"{end_date}T23:59:59Z",
@@ -581,17 +502,3 @@ def get_refund_summary(start_date, end_date):
         "status_breakdown": dict(status_breakdown.most_common()),
         "top_refund_items": sorted_items[:20],
     }
-
-
-# ============================================================
-# 註冊所有 Tool
-# ============================================================
-ORDER_TOOLS = [
-    {"schema": QUERY_ORDERS_SCHEMA, "function": query_orders},
-    {"schema": GET_SALES_SUMMARY_SCHEMA, "function": get_sales_summary},
-    {"schema": GET_TOP_PRODUCTS_SCHEMA, "function": get_top_products},
-    {"schema": GET_SALES_TREND_SCHEMA, "function": get_sales_trend},
-    {"schema": GET_CHANNEL_COMPARISON_SCHEMA, "function": get_channel_comparison},
-    {"schema": GET_ORDER_DETAIL_SCHEMA, "function": get_order_detail},
-    {"schema": GET_REFUND_SUMMARY_SCHEMA, "function": get_refund_summary},
-]

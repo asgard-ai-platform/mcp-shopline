@@ -5,6 +5,10 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from typing import Optional
+from pydantic import Field
+
+from app import mcp
 from tools.base_tool import (
     api_get, fetch_all_pages, money_to_float, get_translation
 )
@@ -14,22 +18,13 @@ from collections import defaultdict
 # ============================================================
 # Tool 1: get_product_list — 商品列表
 # ============================================================
-GET_PRODUCT_LIST_SCHEMA = {
-    "name": "get_product_list",
-    "description": "取得商品列表，含 SKU 變體、價格、品牌、庫存數量等資訊。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "keyword": {"type": "string", "description": "商品名稱關鍵字搜尋"},
-            "brand": {"type": "string", "description": "品牌篩選"},
-            "max_results": {"type": "integer", "description": "最多回傳筆數", "default": 50},
-        },
-    }
-}
-
-
-def get_product_list(keyword=None, brand=None, max_results=50):
-    """取得商品列表"""
+@mcp.tool()
+def get_product_list(
+    keyword: Optional[str] = Field(default=None, description="商品名稱關鍵字搜尋"),
+    brand: Optional[str] = Field(default=None, description="品牌篩選"),
+    max_results: int = Field(default=50, description="最多回傳筆數"),
+) -> dict:
+    """取得商品列表，含 SKU 變體、價格、品牌、庫存數量等資訊。"""
     products = fetch_all_pages("products", max_pages=10)
 
     if keyword:
@@ -83,22 +78,11 @@ def get_product_list(keyword=None, brand=None, max_results=50):
 # ============================================================
 # Tool 2: get_product_variants — 商品 SKU 變體明細
 # ============================================================
-GET_PRODUCT_VARIANTS_SCHEMA = {
-    "name": "get_product_variants",
-    "description": "取得特定商品的所有 SKU 變體明細，含尺寸×顏色的庫存矩陣。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "product_id": {"type": "string", "description": "商品 ID"},
-        },
-        "required": ["product_id"]
-    }
-}
-
-
-def get_product_variants(product_id):
-    """取得商品變體明細"""
-    data = api_get("products")
+@mcp.tool()
+def get_product_variants(
+    product_id: str = Field(description="商品 ID"),
+) -> dict:
+    """取得特定商品的所有 SKU 變體明細，含尺寸×顏色的庫存矩陣。"""
     # 從列表中找到該商品（或直接用 ID 查詢）
     products = fetch_all_pages("products", max_pages=10)
     product = None
@@ -145,20 +129,11 @@ def get_product_variants(product_id):
 # ============================================================
 # Tool 3: get_inventory_overview — 庫存總覽
 # ============================================================
-GET_INVENTORY_OVERVIEW_SCHEMA = {
-    "name": "get_inventory_overview",
-    "description": "取得全商品庫存總覽：總庫存數量、庫存品項數、缺貨品項數等。從商品 variations 的 quantity 欄位計算。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "brand": {"type": "string", "description": "品牌篩選"},
-        },
-    }
-}
-
-
-def get_inventory_overview(brand=None):
-    """取得庫存總覽"""
+@mcp.tool()
+def get_inventory_overview(
+    brand: Optional[str] = Field(default=None, description="品牌篩選"),
+) -> dict:
+    """取得全商品庫存總覽：總庫存數量、庫存品項數、缺貨品項數等。從商品 variations 的 quantity 欄位計算。"""
     products = fetch_all_pages("products", max_pages=10)
 
     if brand:
@@ -239,20 +214,11 @@ def get_inventory_overview(brand=None):
 # ============================================================
 # Tool 4: get_low_stock_alerts — 低庫存警示
 # ============================================================
-GET_LOW_STOCK_ALERTS_SCHEMA = {
-    "name": "get_low_stock_alerts",
-    "description": "取得低庫存或缺貨的 SKU 清單，可自訂庫存門檻值。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "threshold": {"type": "integer", "description": "庫存低於此值即警示", "default": 5},
-        },
-    }
-}
-
-
-def get_low_stock_alerts(threshold=5):
-    """取得低庫存/缺貨警示"""
+@mcp.tool()
+def get_low_stock_alerts(
+    threshold: int = Field(default=5, description="庫存低於此值即警示"),
+) -> dict:
+    """取得低庫存或缺貨的 SKU 清單，可自訂庫存門檻值。"""
     products = fetch_all_pages("products", max_pages=10)
 
     alerts = []
@@ -286,18 +252,9 @@ def get_low_stock_alerts(threshold=5):
 # ============================================================
 # Tool 5: get_warehouses — 倉庫列表
 # ============================================================
-GET_WAREHOUSES_SCHEMA = {
-    "name": "get_warehouses",
-    "description": "取得所有倉庫/門市據點列表。",
-    "input_schema": {
-        "type": "object",
-        "properties": {},
-    }
-}
-
-
-def get_warehouses():
-    """取得倉庫列表"""
+@mcp.tool()
+def get_warehouses() -> dict:
+    """取得所有倉庫/門市據點列表。"""
     data = api_get("warehouses", params={"per_page": 50})
     warehouses = data.get("items", [])
 
@@ -317,21 +274,12 @@ def get_warehouses():
 # ============================================================
 # Tool 6: get_stock_by_warehouse — 各倉庫 SKU 庫存
 # ============================================================
-GET_STOCK_BY_WAREHOUSE_SCHEMA = {
-    "name": "get_stock_by_warehouse",
-    "description": "取得商品在各倉庫/門市的庫存分佈矩陣。可查詢單一商品或全部商品的各倉庫庫存。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "product_id": {"type": "string", "description": "商品 ID（不填則查詢全部商品，但較慢）"},
-            "warehouse_id": {"type": "string", "description": "倉庫 ID 篩選（僅看特定倉庫）"},
-        },
-    }
-}
-
-
-def get_stock_by_warehouse(product_id=None, warehouse_id=None):
-    """取得各倉庫庫存分佈"""
+@mcp.tool()
+def get_stock_by_warehouse(
+    product_id: Optional[str] = Field(default=None, description="商品 ID（不填則查詢全部商品，但較慢）"),
+    warehouse_id: Optional[str] = Field(default=None, description="倉庫 ID 篩選（僅看特定倉庫）"),
+) -> dict:
+    """取得商品在各倉庫/門市的庫存分佈矩陣。可查詢單一商品或全部商品的各倉庫庫存。"""
     # 取得倉庫名稱對照
     wh_data = api_get("warehouses", params={"per_page": 50})
     wh_map = {w["id"]: w.get("name", w["id"]) for w in wh_data.get("items", [])}
@@ -403,16 +351,3 @@ def get_stock_by_warehouse(product_id=None, warehouse_id=None):
         "warehouse_summary": {k: v for k, v in sorted_warehouses},
         "details": product_details[:100],  # 限制回傳筆數
     }
-
-
-# ============================================================
-# 註冊所有 Tool
-# ============================================================
-PRODUCT_TOOLS = [
-    {"schema": GET_PRODUCT_LIST_SCHEMA, "function": get_product_list},
-    {"schema": GET_PRODUCT_VARIANTS_SCHEMA, "function": get_product_variants},
-    {"schema": GET_INVENTORY_OVERVIEW_SCHEMA, "function": get_inventory_overview},
-    {"schema": GET_LOW_STOCK_ALERTS_SCHEMA, "function": get_low_stock_alerts},
-    {"schema": GET_WAREHOUSES_SCHEMA, "function": get_warehouses},
-    {"schema": GET_STOCK_BY_WAREHOUSE_SCHEMA, "function": get_stock_by_warehouse},
-]
