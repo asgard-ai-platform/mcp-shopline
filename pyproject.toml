@@ -33,7 +33,7 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-shopline-mcp = "mcp_server:main"
+mcp-shopline = "mcp_server:main"
 
 [tool.uv.sources]
 mcp = { path = "../python-sdk", editable = true }
