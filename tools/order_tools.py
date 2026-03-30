@@ -66,6 +66,7 @@ def query_orders(
         delivery = o.get("order_delivery") or {}
 
         results.append({
+            "id": o.get("id"),
             "order_number": o.get("order_number"),
             "status": o.get("status"),
             "channel": "POS" if o.get("created_from") == "pos" else "線上",
@@ -387,7 +388,7 @@ def get_channel_comparison(
 # ============================================================
 @mcp.tool()
 def get_order_detail(
-    order_id: str = Field(description="訂單 ID"),
+    order_id: str = Field(description="訂單內部 ID（由 query_orders 回傳的 id 欄位，非 order_number）"),
 ) -> dict:
     """取得單筆訂單的完整資訊，包含商品明細、付款、物流、折扣等。"""
     data = api_get("order_detail", path_params={"order_id": order_id})
