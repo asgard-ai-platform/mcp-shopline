@@ -8,7 +8,8 @@ Thank you for your interest in contributing! This guide will help you get starte
 2. Set up your environment:
 
 ```bash
-pip install requests
+uv venv && source .venv/bin/activate
+uv pip install -e .
 cp .env.example .env
 # Add your Shopline API access token to .env
 export SHOPLINE_API_TOKEN=your_token_here
@@ -24,31 +25,42 @@ python tests/test_all_tools.py
 ## Adding a New Tool
 
 1. Choose the appropriate module in `tools/` (or create a new `{domain}_tools.py`)
-2. Define a schema dict in Claude API `tool_use` format:
+2. At the top of the module, import the `mcp` singleton and helpers:
 
 ```python
-MY_TOOL_SCHEMA = {
-    "name": "my_tool_name",
-    "description": "工具描述（繁體中文）",
-    "input_schema": {
-        "type": "object",
-        "properties": { ... },
-        "required": [ ... ]
-    }
-}
+from app import mcp
+from pydantic import Field
+from typing import Optional, Literal
+from tools.base_tool import api_get, fetch_all_pages, money_to_float, get_translation
 ```
 
-3. Implement the function using `api_get` / `fetch_all_pages` from `base_tool.py`
-4. Append `{"schema": MY_TOOL_SCHEMA, "function": my_tool_fn}` to the module's tool list
-5. Import the new tool list in `tool_registry.py` if you created a new module
-6. Add a test case in `tests/test_all_tools.py`
+3. Define the tool with `@mcp.tool()`, typed parameters, `Field()` descriptions, and a docstring:
 
-Tools are auto-registered via `tool_registry.py` — no extra wiring needed for existing modules.
+```python
+@mcp.tool()
+def my_tool_name(
+    param1: str = Field(description="說明（繁體中文）"),
+    param2: Optional[int] = Field(default=None, description="說明"),
+) -> dict:
+    """工具的整體說明（繁體中文），成為 MCP tools/list 中的 description。"""
+    # implementation using api_get / fetch_all_pages
+    ...
+```
+
+4. If you created a new module, import it in `mcp_server.py` to trigger registration:
+
+```python
+import tools.your_new_module  # noqa: F401
+```
+
+5. Add a test case in `tests/test_all_tools.py` (import and call the function directly)
+
+No schema dict, no tool list, no extra wiring needed — `@mcp.tool()` handles registration automatically.
 
 ## Code Conventions
 
 - **Language**: Code comments and tool descriptions are in Traditional Chinese (zh-Hant)
-- **Dependencies**: Only `requests` as an external dependency. Avoid adding new ones unless absolutely necessary.
+- **Dependencies**: `requests` and `mcp` are the only external dependencies. Avoid adding new ones unless absolutely necessary.
 - **HTTP calls**: Use `api_get` / `fetch_all_pages` / `fetch_all_pages_by_date_segments` from `base_tool.py` — do not make raw HTTP calls in tools
 - **Money values**: Use `money_to_float()` from `base_tool.py` for all monetary fields
 - **Order filtering**: Use the `VALID_ORDER_STATUSES` set for filtering valid revenue orders

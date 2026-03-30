@@ -5,6 +5,10 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from typing import Optional, Literal
+from pydantic import Field
+
+from app import mcp
 from tools.base_tool import (
     fetch_all_pages, money_to_float, get_translation
 )
@@ -17,25 +21,15 @@ VALID_ORDER_STATUSES = {"completed", "confirmed"}
 # ============================================================
 # Tool 1: get_rfm_analysis — RFM 分群分析
 # ============================================================
-GET_RFM_ANALYSIS_SCHEMA = {
-    "name": "get_rfm_analysis",
-    "description": "根據訂單資料進行 RFM（Recency/Frequency/Monetary）分群分析。注意：僅能分析有下單紀錄的客戶（Customers API 為 403）。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "start_date": {"type": "string", "description": "分析區間起始 YYYY-MM-DD"},
-            "end_date": {"type": "string", "description": "分析區間結束 YYYY-MM-DD"},
-            "r_days_threshold": {"type": "integer", "description": "Recency 門檻天數（最近消費 ≤ 此值為高 R）", "default": 30},
-            "f_threshold": {"type": "integer", "description": "Frequency 門檻（消費 ≥ 此值為高 F）", "default": 2},
-            "m_threshold": {"type": "number", "description": "Monetary 門檻金額（累計 ≥ 此值為高 M）", "default": 5000},
-        },
-        "required": ["start_date", "end_date"]
-    }
-}
-
-
-def get_rfm_analysis(start_date, end_date, r_days_threshold=30, f_threshold=2, m_threshold=5000):
-    """RFM 分群分析"""
+@mcp.tool()
+def get_rfm_analysis(
+    start_date: str = Field(description="分析區間起始 YYYY-MM-DD"),
+    end_date: str = Field(description="分析區間結束 YYYY-MM-DD"),
+    r_days_threshold: int = Field(default=30, description="Recency 門檻天數（最近消費 ≤ 此值為高 R）"),
+    f_threshold: int = Field(default=2, description="Frequency 門檻（消費 ≥ 此值為高 F）"),
+    m_threshold: float = Field(default=5000, description="Monetary 門檻金額（累計 ≥ 此值為高 M）"),
+) -> dict:
+    """根據訂單資料進行 RFM（Recency/Frequency/Monetary）分群分析。注意：僅能分析有下單紀錄的客戶（Customers API 為 403）。"""
     params = {
         "created_after": f"{start_date}T00:00:00Z",
         "created_before": f"{end_date}T23:59:59Z",
@@ -121,22 +115,12 @@ def get_rfm_analysis(start_date, end_date, r_days_threshold=30, f_threshold=2, m
 # ============================================================
 # Tool 2: get_repurchase_analysis — 回購率分析
 # ============================================================
-GET_REPURCHASE_ANALYSIS_SCHEMA = {
-    "name": "get_repurchase_analysis",
-    "description": "分析客戶回購率與回購週期。計算新客 vs 舊客比例、回購率、平均回購天數。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "start_date": {"type": "string", "description": "分析區間起始 YYYY-MM-DD"},
-            "end_date": {"type": "string", "description": "分析區間結束 YYYY-MM-DD"},
-        },
-        "required": ["start_date", "end_date"]
-    }
-}
-
-
-def get_repurchase_analysis(start_date, end_date):
-    """回購率分析"""
+@mcp.tool()
+def get_repurchase_analysis(
+    start_date: str = Field(description="分析區間起始 YYYY-MM-DD"),
+    end_date: str = Field(description="分析區間結束 YYYY-MM-DD"),
+) -> dict:
+    """分析客戶回購率與回購週期。計算新客 vs 舊客比例、回購率、平均回購天數。"""
     params = {
         "created_after": f"{start_date}T00:00:00Z",
         "created_before": f"{end_date}T23:59:59Z",
@@ -201,23 +185,13 @@ def get_repurchase_analysis(start_date, end_date):
 # ============================================================
 # Tool 3: get_customer_geo_analysis — 客戶地區分析
 # ============================================================
-GET_CUSTOMER_GEO_SCHEMA = {
-    "name": "get_customer_geo_analysis",
-    "description": "根據訂單的收件地址分析客戶地區分佈（縣市層級）。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "start_date": {"type": "string", "description": "分析區間起始 YYYY-MM-DD"},
-            "end_date": {"type": "string", "description": "分析區間結束 YYYY-MM-DD"},
-            "channel": {"type": "string", "enum": ["online", "pos", "all"], "default": "all"},
-        },
-        "required": ["start_date", "end_date"]
-    }
-}
-
-
-def get_customer_geo_analysis(start_date, end_date, channel="all"):
-    """客戶地區分析"""
+@mcp.tool()
+def get_customer_geo_analysis(
+    start_date: str = Field(description="分析區間起始 YYYY-MM-DD"),
+    end_date: str = Field(description="分析區間結束 YYYY-MM-DD"),
+    channel: Literal["online", "pos", "all"] = Field(default="all", description="通路篩選"),
+) -> dict:
+    """根據訂單的收件地址分析客戶地區分佈（縣市層級）。"""
     params = {
         "created_after": f"{start_date}T00:00:00Z",
         "created_before": f"{end_date}T23:59:59Z",
@@ -265,22 +239,12 @@ def get_customer_geo_analysis(start_date, end_date, channel="all"):
 # ============================================================
 # Tool 4: get_inventory_turnover — 庫存周轉分析
 # ============================================================
-GET_INVENTORY_TURNOVER_SCHEMA = {
-    "name": "get_inventory_turnover",
-    "description": "計算庫存周轉指標：周轉天數、周轉率。需要商品庫存 + 銷售數據。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "start_date": {"type": "string", "description": "分析區間起始 YYYY-MM-DD"},
-            "end_date": {"type": "string", "description": "分析區間結束 YYYY-MM-DD"},
-        },
-        "required": ["start_date", "end_date"]
-    }
-}
-
-
-def get_inventory_turnover(start_date, end_date):
-    """庫存周轉分析"""
+@mcp.tool()
+def get_inventory_turnover(
+    start_date: str = Field(description="分析區間起始 YYYY-MM-DD"),
+    end_date: str = Field(description="分析區間結束 YYYY-MM-DD"),
+) -> dict:
+    """計算庫存周轉指標：周轉天數、周轉率。需要商品庫存 + 銷售數據。"""
     # 取得商品庫存
     products = fetch_all_pages("products", max_pages=10)
 
@@ -348,23 +312,13 @@ def get_inventory_turnover(start_date, end_date):
 # ============================================================
 # Tool 5: get_category_sales — 商品分類銷售分析
 # ============================================================
-GET_CATEGORY_SALES_SCHEMA = {
-    "name": "get_category_sales",
-    "description": "依商品分類（Category）彙總銷售數據：各分類的營業額、銷量、商品數。需交叉 Categories API + Products + Orders。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "start_date": {"type": "string", "description": "起始日期 YYYY-MM-DD"},
-            "end_date": {"type": "string", "description": "結束日期 YYYY-MM-DD"},
-            "channel": {"type": "string", "enum": ["online", "pos", "all"], "default": "all"},
-        },
-        "required": ["start_date", "end_date"]
-    }
-}
-
-
-def get_category_sales(start_date, end_date, channel="all"):
-    """商品分類銷售分析"""
+@mcp.tool()
+def get_category_sales(
+    start_date: str = Field(description="起始日期 YYYY-MM-DD"),
+    end_date: str = Field(description="結束日期 YYYY-MM-DD"),
+    channel: Literal["online", "pos", "all"] = Field(default="all", description="通路篩選"),
+) -> dict:
+    """依商品分類（Category）彙總銷售數據：各分類的營業額、銷量、商品數。需交叉 Categories API + Products + Orders。"""
     from tools.base_tool import api_get
 
     # Step 1: 取得分類結構
@@ -460,29 +414,12 @@ def get_category_sales(start_date, end_date, channel="all"):
 # ============================================================
 # Tool 6: get_promotion_analysis — 促銷活動分析
 # ============================================================
-GET_PROMOTION_ANALYSIS_SCHEMA = {
-    "name": "get_promotion_analysis",
-    "description": "分析促銷活動效果：各活動的使用次數、折扣類型、狀態分佈。可搭配銷售數據評估促銷 ROI。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "status": {
-                "type": "string",
-                "enum": ["active", "inactive", "hidden", "all"],
-                "description": "活動狀態篩選",
-                "default": "all"
-            },
-            "discount_type": {
-                "type": "string",
-                "description": "折扣類型篩選（amount/percentage/free_shipping/addon）"
-            },
-        },
-    }
-}
-
-
-def get_promotion_analysis(status="all", discount_type=None):
-    """促銷活動分析"""
+@mcp.tool()
+def get_promotion_analysis(
+    status: Literal["active", "inactive", "hidden", "all"] = Field(default="all", description="活動狀態篩選"),
+    discount_type: Optional[str] = Field(default=None, description="折扣類型篩選（amount/percentage/free_shipping/addon）"),
+) -> dict:
+    """分析促銷活動效果：各活動的使用次數、折扣類型、狀態分佈。可搭配銷售數據評估促銷 ROI。"""
     from tools.base_tool import api_get
 
     promotions = fetch_all_pages("promotions", max_pages=10)
@@ -534,16 +471,3 @@ def get_promotion_analysis(status="all", discount_type=None):
         "type_breakdown": {k: v for k, v in sorted(type_breakdown.items(), key=lambda x: -x[1]["count"])},
         "promotions": results,
     }
-
-
-# ============================================================
-# 註冊所有 Tool
-# ============================================================
-ANALYTICS_TOOLS = [
-    {"schema": GET_RFM_ANALYSIS_SCHEMA, "function": get_rfm_analysis},
-    {"schema": GET_REPURCHASE_ANALYSIS_SCHEMA, "function": get_repurchase_analysis},
-    {"schema": GET_CUSTOMER_GEO_SCHEMA, "function": get_customer_geo_analysis},
-    {"schema": GET_INVENTORY_TURNOVER_SCHEMA, "function": get_inventory_turnover},
-    {"schema": GET_CATEGORY_SALES_SCHEMA, "function": get_category_sales},
-    {"schema": GET_PROMOTION_ANALYSIS_SCHEMA, "function": get_promotion_analysis},
-]

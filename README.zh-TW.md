@@ -41,7 +41,7 @@ pip install mcp-shopline
 或使用 uvx（免安裝）：
 
 ```bash
-uvx --from mcp-shopline shopline-mcp
+uvx --from mcp-shopline mcp-shopline
 ```
 
 設定 API Token：
@@ -55,13 +55,13 @@ export SHOPLINE_API_TOKEN=your_token_here
 透過 Claude CLI 加入伺服器：
 
 ```bash
-claude mcp add --transport stdio shopline -- shopline-mcp
+claude mcp add --transport stdio shopline -- mcp-shopline
 ```
 
 或直接帶入環境變數：
 
 ```bash
-claude mcp add --transport stdio shopline -e SHOPLINE_API_TOKEN=your_token_here -- shopline-mcp
+claude mcp add --transport stdio shopline -e SHOPLINE_API_TOKEN=your_token_here -- mcp-shopline
 ```
 
 若您將專案 clone 至本機，Claude Code 會自動偵測 `.mcp.json`，19 個工具立即可用。
@@ -74,7 +74,7 @@ claude mcp add --transport stdio shopline -e SHOPLINE_API_TOKEN=your_token_here 
 {
   "mcpServers": {
     "shopline": {
-      "command": "shopline-mcp",
+      "command": "mcp-shopline",
       "env": {
         "SHOPLINE_API_TOKEN": "your_token_here"
       }
@@ -90,7 +90,7 @@ claude mcp add --transport stdio shopline -e SHOPLINE_API_TOKEN=your_token_here 
   "mcpServers": {
     "shopline": {
       "command": "uvx",
-      "args": ["--from", "mcp-shopline", "shopline-mcp"],
+      "args": ["--from", "mcp-shopline", "mcp-shopline"],
       "env": {
         "SHOPLINE_API_TOKEN": "your_token_here"
       }

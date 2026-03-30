@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "MCP server wrapping the Shopline Open API into 19 AI Agent-callable tools for e-commerce data analysis"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     { name = "Asgard AI Platform" },
 ]
@@ -13,7 +13,6 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -21,6 +20,7 @@ classifiers = [
 ]
 dependencies = [
     "requests",
+    "mcp",
 ]
 
 [project.urls]
@@ -33,10 +33,13 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-shopline-mcp = "mcp_server:main"
+mcp-shopline = "mcp_server:main"
+
+[tool.uv.sources]
+mcp = { path = "../python-sdk", editable = true }
 
 [tool.setuptools]
-py-modules = ["mcp_server"]
+py-modules = ["mcp_server", "app"]
 
 [tool.setuptools.packages.find]
 include = ["config*", "tools*"]

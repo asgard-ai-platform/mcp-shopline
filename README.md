@@ -41,7 +41,7 @@ pip install mcp-shopline
 Or use uvx (no install needed):
 
 ```bash
-uvx --from mcp-shopline shopline-mcp
+uvx --from mcp-shopline mcp-shopline
 ```
 
 Set your API token:
@@ -55,13 +55,13 @@ export SHOPLINE_API_TOKEN=your_token_here
 Add the server via the Claude CLI:
 
 ```bash
-claude mcp add --transport stdio shopline -- shopline-mcp
+claude mcp add --transport stdio shopline -- mcp-shopline
 ```
 
 Or with the environment variable inline:
 
 ```bash
-claude mcp add --transport stdio shopline -e SHOPLINE_API_TOKEN=your_token_here -- shopline-mcp
+claude mcp add --transport stdio shopline -e SHOPLINE_API_TOKEN=your_token_here -- mcp-shopline
 ```
 
 If you clone the repo locally, the `.mcp.json` config will be auto-detected by Claude Code and all 19 tools become available immediately.
@@ -74,7 +74,7 @@ Add to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "shopline": {
-      "command": "shopline-mcp",
+      "command": "mcp-shopline",
       "env": {
         "SHOPLINE_API_TOKEN": "your_token_here"
       }
@@ -90,7 +90,7 @@ Or with uvx:
   "mcpServers": {
     "shopline": {
       "command": "uvx",
-      "args": ["--from", "mcp-shopline", "shopline-mcp"],
+      "args": ["--from", "mcp-shopline", "mcp-shopline"],
       "env": {
         "SHOPLINE_API_TOKEN": "your_token_here"
       }
