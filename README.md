@@ -3,6 +3,9 @@
 [![PyPI version](https://img.shields.io/pypi/v/mcp-shopline)](https://pypi.org/project/mcp-shopline/)
 [![Python versions](https://img.shields.io/pypi/pyversions/mcp-shopline)](https://pypi.org/project/mcp-shopline/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub stars](https://img.shields.io/github/stars/asgard-ai-platform/mcp-shopline)](https://github.com/asgard-ai-platform/mcp-shopline/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/asgard-ai-platform/mcp-shopline)](https://github.com/asgard-ai-platform/mcp-shopline/issues)
+[![GitHub last commit](https://img.shields.io/github/last-commit/asgard-ai-platform/mcp-shopline)](https://github.com/asgard-ai-platform/mcp-shopline/commits/main)
 
 [繁體中文](README.zh-TW.md)
 
