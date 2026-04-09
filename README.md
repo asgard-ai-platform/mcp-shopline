@@ -442,21 +442,21 @@ get_top_products(
 )
 ```
 
-**Result:** 第一名「極輕防水小白鞋 Scooter One」營收 NT$892,000（268 雙），第二名「慕斯羊毛修身短T」營收 NT$654,000...
+**Result:** 第一名「經典帆布休閒鞋 Classic Canvas」營收 NT$892,000（268 雙），第二名「輕量機能防風外套」營收 NT$654,000...
 
 ---
 
 ### "Tell me about this customer"
 
-> **You:** 幫我查一下客戶「李仁和」的完整資訊
+> **You:** 幫我查一下客戶「陳大明」的完整資訊
 
 **AI calls:**
 ```
-list_customers(search_keyword = "李仁和")
-→ get_customer_profile(customer_id = "690365a1...")
+list_customers(search_keyword = "陳大明")
+→ get_customer_profile(customer_id = "5f3a8b2c...")
 ```
 
-**Result:** 李仁和，VIP 會員，累計消費 NT$56,330，近 30 天消費 5 次，會員點數餘額 2,800 點，儲值金餘額 NT$500。
+**Result:** 陳大明，VIP 會員，累計消費 NT$56,330，近 30 天消費 5 次，會員點數餘額 2,800 點，儲值金餘額 NT$500。
 
 ---
 
@@ -469,7 +469,7 @@ list_customers(search_keyword = "李仁和")
 get_low_stock_alerts(threshold = 5)
 ```
 
-**Result:** 共 3,098 個 SKU 低於門檻，其中 2,847 個已完全缺貨。最嚴重的是「極輕防水小白鞋 Scooter One」黑面白底 EU40（庫存 -2）。
+**Result:** 共 3,098 個 SKU 低於門檻，其中 2,847 個已完全缺貨。最嚴重的是「經典帆布休閒鞋 Classic Canvas」深藍色 M 號（庫存 0）。
 
 ---
 
@@ -485,7 +485,7 @@ get_channel_comparison(
 )
 ```
 
-**Result:** 線上官網營收 NT$780,000（佔 63%），漢神洲際門市 NT$220,000（佔 18%），京站 NT$120,000（佔 10%）...
+**Result:** 線上官網營收 NT$780,000（佔 63%），信義旗艦店 NT$220,000（佔 18%），中山概念店 NT$120,000（佔 10%）...
 
 ---
 
