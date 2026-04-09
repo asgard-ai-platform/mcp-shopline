@@ -9,4 +9,3 @@ dist/
 *.egg-info
 .claude/*.md
 .claude/*.local.*
-reference/
