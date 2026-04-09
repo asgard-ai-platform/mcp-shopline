@@ -17,7 +17,7 @@ def update_merchant(
     merchant_data: dict = Field(
         description=(
             "要更新的商家欄位，例如："
-            "{\"name\": \"我的商店\", \"email\": \"shop@example.com\", \"phone\": \"02-1234-5678\", \"address\": \"台北市...\"}"
+            "{\"name\": \"我的商店\", \"email\": \"shop@yourstore.com\", \"phone\": \"02-1234-5678\", \"address\": \"台北市...\"}"
         )
     ),
 ) -> dict:

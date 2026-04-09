@@ -10,7 +10,7 @@ from typing import Optional, List
 from pydantic import Field
 
 from app import mcp
-from tools.base_tool import api_post, api_patch
+from tools.base_tool import api_post, api_patch, resolve_field
 
 
 @mcp.tool()
@@ -34,6 +34,7 @@ def cancel_order(
     - 若訂單已出貨，可能無法取消（取決於 Shopline 規則）
     - 已付款訂單取消後需另行退款
     """
+    reason = resolve_field(reason)
     body = {}
     if reason is not None:
         body["reason"] = reason
@@ -206,6 +207,9 @@ def update_order_status(
     - 狀態變更可能觸發客戶通知（取決於商店設定）
     - 非法的狀態值或不合法的狀態轉換會導致 API 回傳錯誤
     """
+    status = resolve_field(status)
+    delivery_status = resolve_field(delivery_status)
+    payment_status = resolve_field(payment_status)
     if status is None and delivery_status is None and payment_status is None:
         return {
             "success": False,

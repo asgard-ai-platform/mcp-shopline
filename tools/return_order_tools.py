@@ -9,7 +9,7 @@ from typing import Optional
 from pydantic import Field
 
 from app import mcp
-from tools.base_tool import api_get, fetch_all_pages, money_to_float, get_translation
+from tools.base_tool import api_get, fetch_all_pages, money_to_float, get_translation, resolve_field
 
 
 @mcp.tool()
@@ -36,6 +36,8 @@ def list_return_orders(
     每個 return_order 包含 id, status, order_id, total（TWD float）,
     items_count, created_at。
     """
+    start_date = resolve_field(start_date)
+    end_date = resolve_field(end_date)
     params = {"per_page": 50}
     if start_date:
         params["created_after"] = start_date

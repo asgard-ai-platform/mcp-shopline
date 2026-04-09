@@ -17,7 +17,7 @@ def upload_media(
         description=(
             "媒體上傳資料。可能需要包含 file_url（遠端 URL）或 base64 編碼的檔案內容，"
             "視 Shopline API 支援的格式而定。"
-            "範例：{\"file_url\": \"https://example.com/image.jpg\", \"type\": \"image\"}"
+            "範例：{\"file_url\": \"https://your-cdn.shoplineapp.com/image.jpg\", \"type\": \"image\"}"
         )
     ),
 ) -> dict:

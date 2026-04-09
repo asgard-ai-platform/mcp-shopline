@@ -9,7 +9,7 @@ from typing import Optional
 from pydantic import Field
 
 from app import mcp
-from tools.base_tool import api_get, fetch_all_pages
+from tools.base_tool import api_get, fetch_all_pages, resolve_field
 
 
 @mcp.tool()
@@ -31,6 +31,7 @@ def list_customer_groups(
     dict 含 total_found, returned, groups[]。
     每個 group 包含 id, name, customers_count, created_at。
     """
+    search_keyword = resolve_field(search_keyword)
     if search_keyword:
         params = {"keyword": search_keyword, "per_page": min(max_results, 50)}
         data = api_get("customer_groups_search", params=params)

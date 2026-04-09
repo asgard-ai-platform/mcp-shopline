@@ -10,13 +10,16 @@ authors = [
 ]
 keywords = ["mcp", "shopline", "e-commerce", "ai-agent", "claude"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries",
+    "Topic :: Office/Business",
+    "Topic :: Office/Business :: Financial :: Point-Of-Sale",
 ]
 dependencies = [
     "requests",

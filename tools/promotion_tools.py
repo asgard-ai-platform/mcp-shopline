@@ -9,7 +9,7 @@ from typing import Optional
 from pydantic import Field
 
 from app import mcp
-from tools.base_tool import api_get, fetch_all_pages, money_to_float, get_translation
+from tools.base_tool import api_get, fetch_all_pages, money_to_float, get_translation, resolve_field
 
 
 @mcp.tool()
@@ -30,6 +30,7 @@ def list_promotions(
     dict 含 total_found, returned, items[]。
     每筆包含 id, title, status, discount_type, start_at, end_at。
     """
+    status = resolve_field(status)
     params = {}
     if status:
         params["status"] = status

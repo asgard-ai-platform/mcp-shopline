@@ -10,7 +10,7 @@ from pydantic import Field
 
 from app import mcp
 from tools.base_tool import (
-    api_get, fetch_all_pages, money_to_float, get_translation
+    api_get, fetch_all_pages, money_to_float, get_translation, resolve_field
 )
 
 
@@ -33,6 +33,7 @@ def list_customers(
     dict 含 total_found, returned, customers[]。
     每個 customer 包含 id, name, email, phone, tags, created_at。
     """
+    search_keyword = resolve_field(search_keyword)
     if search_keyword:
         params = {"keyword": search_keyword, "per_page": min(max_results, 50)}
         data = api_get("customers_search", params=params)

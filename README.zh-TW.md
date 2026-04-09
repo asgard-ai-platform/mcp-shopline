@@ -6,6 +6,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/asgard-ai-platform/mcp-shopline)](https://github.com/asgard-ai-platform/mcp-shopline/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/asgard-ai-platform/mcp-shopline)](https://github.com/asgard-ai-platform/mcp-shopline/issues)
 [![GitHub last commit](https://img.shields.io/github/last-commit/asgard-ai-platform/mcp-shopline)](https://github.com/asgard-ai-platform/mcp-shopline/commits/main)
+[![MCP](https://img.shields.io/badge/MCP-compatible-blue)](https://modelcontextprotocol.io/)
 
 [English](README.md)
 
@@ -405,6 +406,120 @@ python scripts/auth/test_connection.py
 - [x] 新增 Customers API 工具（會員輪廓、人口統計、會員等級）
 - [ ] 支援多商店（多 Token）
 - [ ] 新增 Webhook 即時訂單通知
+
+---
+
+## 使用範例
+
+### 「這個月的銷售狀況如何？」
+
+> **你：** 這個月的銷售摘要是什麼？
+
+**AI 呼叫：**
+```
+get_sales_summary(
+  start_date = "2026-04-01",
+  end_date = "2026-04-09",
+  channel = "all"
+)
+```
+
+**結果：** 本月營業額 NT$1,234,567，共 456 筆訂單，客單價 NT$2,707，線上佔 62%、門市佔 38%。
+
+---
+
+### 「哪些商品賣最好？」
+
+> **你：** 上個月最暢銷的前 5 名商品是什麼？
+
+**AI 呼叫：**
+```
+get_top_products(
+  start_date = "2026-03-01",
+  end_date = "2026-03-31",
+  top_n = 5,
+  sort_by = "revenue"
+)
+```
+
+**結果：** 第一名「極輕防水小白鞋 Scooter One」營收 NT$892,000（268 雙），第二名「慕斯羊毛修身短T」營收 NT$654,000...
+
+---
+
+### 「查詢客戶資訊」
+
+> **你：** 幫我查一下客戶「李仁和」的完整資訊
+
+**AI 呼叫：**
+```
+list_customers(search_keyword = "李仁和")
+→ get_customer_profile(customer_id = "690365a1...")
+```
+
+**結果：** 李仁和，VIP 會員，累計消費 NT$56,330，近 30 天消費 5 次，會員點數餘額 2,800 點，儲值金餘額 NT$500。
+
+---
+
+### 「哪些商品快缺貨了？」
+
+> **你：** 哪些商品快缺貨了？
+
+**AI 呼叫：**
+```
+get_low_stock_alerts(threshold = 5)
+```
+
+**結果：** 共 3,098 個 SKU 低於門檻，其中 2,847 個已完全缺貨。最嚴重的是「極輕防水小白鞋 Scooter One」黑面白底 EU40（庫存 -2）。
+
+---
+
+### 「比較線上和門市業績」
+
+> **你：** 比較一下線上和門市這個月的業績
+
+**AI 呼叫：**
+```
+get_channel_comparison(
+  start_date = "2026-04-01",
+  end_date = "2026-04-09"
+)
+```
+
+**結果：** 線上官網營收 NT$780,000（佔 63%），漢神洲際門市 NT$220,000（佔 18%），京站 NT$120,000（佔 10%）...
+
+---
+
+### 「客戶分群分析」
+
+> **你：** 分析一下客戶 RFM 分群
+
+**AI 呼叫：**
+```
+get_rfm_analysis(
+  start_date = "2026-01-01",
+  end_date = "2026-04-09"
+)
+```
+
+**結果：** 共 1,618 位客戶。最佳客戶 70 人（HHH），近期新客 433 人（HLL），流失高消費客戶 188 人（LLH）需要挽回。
+
+---
+
+### 「建立新客戶」（寫入工具）
+
+> **你：** 幫我建立一個新客戶，姓名王小明，email wang@test.com
+
+**AI 呼叫：**
+```
+create_customer(
+  name = "王小明",
+  email = "wang@test.com"
+)
+```
+
+**結果：** `[WRITE]` 客戶王小明建立成功，ID: 69d77d57...
+
+---
 
 ## 貢獻
 

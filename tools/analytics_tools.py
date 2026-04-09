@@ -10,7 +10,7 @@ from pydantic import Field
 
 from app import mcp
 from tools.base_tool import (
-    api_get, fetch_all_pages, money_to_float, get_translation
+    api_get, fetch_all_pages, money_to_float, get_translation, resolve_field
 )
 from collections import defaultdict
 from datetime import datetime
@@ -420,6 +420,7 @@ def get_promotion_analysis(
     discount_type: Optional[str] = Field(default=None, description="折扣類型篩選（amount/percentage/free_shipping/addon）"),
 ) -> dict:
     """分析促銷活動效果：各活動的使用次數、折扣類型、狀態分佈。可搭配銷售數據評估促銷 ROI。"""
+    discount_type = resolve_field(discount_type)
     from tools.base_tool import api_get
 
     promotions = fetch_all_pages("promotions", max_pages=10)

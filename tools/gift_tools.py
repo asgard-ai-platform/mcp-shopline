@@ -9,7 +9,7 @@ from typing import Optional
 from pydantic import Field
 
 from app import mcp
-from tools.base_tool import api_get, fetch_all_pages, money_to_float, get_translation
+from tools.base_tool import api_get, fetch_all_pages, money_to_float, get_translation, resolve_field
 
 
 @mcp.tool()
@@ -31,6 +31,7 @@ def list_gifts(
     dict 含 total_found, returned, items[]。
     每筆包含 id, name, sku, quantity, status, created_at。
     """
+    search_keyword = resolve_field(search_keyword)
     if search_keyword:
         params = {"keyword": search_keyword, "per_page": min(max_results, 50)}
         data = api_get("gifts_search", params=params)
