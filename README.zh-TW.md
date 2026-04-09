@@ -366,6 +366,34 @@ python scripts/auth/test_connection.py
 
 ---
 
+## 已知測試缺口
+
+以下工具已實作並註冊，但因測試商店資料或 Token 權限限制，**尚未完成完整 E2E 測試**。程式碼可正常編譯、匯入、註冊，只需要實際資料或更廣的 Token 權限才能驗證端對端流程。
+
+### 需要商店資料（透過 Shopline 後台建立）
+
+| 工具 | 需要的資料 |
+|------|-----------|
+| `get_flash_price_campaign_detail` | 快閃價格活動（後台 > 行銷 > 限時特賣） |
+| `get_affiliate_campaign_usage` | 至少一筆使用聯盟行銷碼的訂單 |
+| `get_product_subscription_detail` | 啟用訂閱制的商品（後台 > 商品設定） |
+| `get_return_order_detail` | 已完成的退貨單（後台 > 訂單 > 退貨） |
+| `get_order_delivery` | 已執行出貨的訂單（出貨後物流才有獨立 ID） |
+| `get_customer_group_members` | 至少一個客戶群組（後台 > 客戶 > 群組） |
+| `get_customer_tier_history` | 有會員等級變動紀錄的客戶（需設定等級規則） |
+| `get_delivery_time_slots` | 有設定取貨時段的物流選項 |
+
+### 需要 Token 權限
+
+| 工具 | 需要的權限 |
+|------|-----------|
+| `list_conversations` / `get_conversation_messages` | 對話 (Conversations) 讀取權限 |
+| `list_channels` / `get_channel_detail` | 渠道 (Channels) 讀取權限（常見回傳 403/422；渠道資訊也可從 `order.channel.created_by_channel_name` 取得） |
+
+### 寫入工具
+
+全部 68 個寫入工具已通過匯入/註冊驗證。完整 E2E 寫入測試需設定 `SHOPLINE_TEST_WRITES=1` 並使用專用測試商店，以避免修改正式資料。測試腳本位於 `tests/test_writes/`。
+
 ## 開發計畫
 
 - [x] `get_refund_by_store` — 依門市/通路拆分退貨統計

@@ -366,6 +366,34 @@ python scripts/auth/test_connection.py
 
 ---
 
+## Known Test Gaps
+
+The following tools are implemented and registered but have **not been fully E2E tested** due to test-store data or token-scope limitations. They compile correctly, import successfully, and follow all project conventions — they just need real data or broader token permissions to verify end-to-end.
+
+### Requires store data (create via Shopline admin)
+
+| Tool | What's needed |
+|------|---------------|
+| `get_flash_price_campaign_detail` | A flash price campaign (create in Shopline admin > Marketing > Flash Sale) |
+| `get_affiliate_campaign_usage` | An affiliate campaign that has been used in at least one order |
+| `get_product_subscription_detail` | A product with subscription enabled (configure in admin > Products) |
+| `get_return_order_detail` | A completed return order (create via admin > Orders > Returns) |
+| `get_order_delivery` | An order with shipment executed (delivery has its own ID after shipment) |
+| `get_customer_group_members` | At least one customer group (create via admin > Customers > Groups) |
+| `get_customer_tier_history` | A customer with membership tier changes (requires tier rules configured) |
+| `get_delivery_time_slots` | A delivery option with time slots configured |
+
+### Requires token permissions
+
+| Tool | Required scope |
+|------|---------------|
+| `list_conversations` / `get_conversation_messages` | Conversations read permission |
+| `list_channels` / `get_channel_detail` | Channels read permission (commonly returns 403/422; channel info is also available via `order.channel.created_by_channel_name`) |
+
+### Write tools
+
+All 68 write tools have been verified at the import/registration level. Full E2E write tests require `SHOPLINE_TEST_WRITES=1` and a dedicated test store to avoid modifying production data. See `tests/test_writes/` for gated test scripts.
+
 ## Roadmap
 
 - [x] `get_refund_by_store` — return order breakdown by store/channel
