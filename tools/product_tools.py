@@ -24,7 +24,12 @@ def get_product_list(
     brand: Optional[str] = Field(default=None, description="品牌篩選"),
     max_results: int = Field(default=50, description="最多回傳筆數"),
 ) -> dict:
-    """取得商品列表，含 SKU 變體、價格、品牌、庫存數量等資訊。"""
+    """取得商品列表，含 SKU 變體、價格、品牌、庫存數量等資訊。
+
+    【呼叫的 Shopline API】
+    - GET /v1/products
+    - GET /v1/products/search
+    """
     keyword = resolve_field(keyword)
     brand = resolve_field(brand)
     products = fetch_all_pages("products", max_pages=10)
@@ -84,7 +89,11 @@ def get_product_list(
 def get_product_variants(
     product_id: str = Field(description="商品 ID"),
 ) -> dict:
-    """取得特定商品的所有 SKU 變體明細，含尺寸×顏色的庫存矩陣。"""
+    """取得特定商品的所有 SKU 變體明細，含尺寸×顏色的庫存矩陣。
+
+    【呼叫的 Shopline API】
+    - GET /v1/products/{product_id}
+    """
     # 從列表中找到該商品（或直接用 ID 查詢）
     products = fetch_all_pages("products", max_pages=10)
     product = None
@@ -366,7 +375,7 @@ def get_locked_inventory() -> dict:
     取得目前被鎖定（預留）的庫存商品清單，協助分析哪些 SKU 有待出貨的預留數量。
 
     【呼叫的 Shopline API】
-    GET /v1/products/locked-inventory
+    - GET /v1/products/locked-inventory
 
     【回傳結構】
     - total: 鎖定庫存的 SKU 總筆數
@@ -401,7 +410,7 @@ def list_purchase_orders(
     取得 POS 採購單列表，用於了解進貨狀況與採購歷史。
 
     【呼叫的 Shopline API】
-    GET /v1/pos/purchase_orders（分頁）
+    - GET /v1/pos/purchase_orders
 
     【回傳結構】
     - total_found: 查詢到的採購單總數
@@ -439,7 +448,7 @@ def get_purchase_order_detail(
     取得單一 POS 採購單的完整明細，含採購品項、數量、金額等資訊。
 
     【呼叫的 Shopline API】
-    GET /v1/pos/purchase_orders/{purchase_order_id}
+    - GET /v1/pos/purchase_orders/{purchase_order_id}
 
     【回傳結構】
     - id、status、created_at、total

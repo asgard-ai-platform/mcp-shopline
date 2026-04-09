@@ -33,7 +33,12 @@ def query_orders(
     store_name: Optional[str] = Field(default=None, description="門市名稱篩選（如：松菸誠品、新光A11）"),
     max_results: int = Field(default=100, description="最多回傳筆數"),
 ) -> dict:
-    """依時間區間、訂單狀態、通路來源查詢訂單列表。回傳精簡的訂單摘要。"""
+    """依時間區間、訂單狀態、通路來源查詢訂單列表。回傳精簡的訂單摘要。
+
+    【呼叫的 Shopline API】
+    - GET /v1/orders/search
+    - GET /v1/orders
+    """
     status = resolve_field(status)
     store_name = resolve_field(store_name)
     params = {
@@ -521,8 +526,7 @@ def get_archived_orders(
     【用途】查詢已封存（archived）的歷史訂單列表，適合調閱長期歸檔的舊訂單資料。
 
     【呼叫的 Shopline API】
-    GET /v1/orders/archived
-    端點鍵：orders_archived
+    - GET /v1/orders/archived
 
     【回傳結構】
     {
@@ -599,8 +603,7 @@ def get_order_labels(
     【用途】取得指定訂單的配送標籤資訊，可用於列印物流面單或查詢寄件單號。
 
     【呼叫的 Shopline API】
-    GET /v1/orders/{order_id}/labels
-    端點鍵：order_labels
+    - GET /v1/orders/{order_id}/labels
 
     【回傳結構】
     API 原始回應，通常包含：
@@ -630,8 +633,7 @@ def get_order_tags(
     【用途】取得指定訂單上附加的所有標籤，可用於分類管理或篩選特殊訂單。
 
     【呼叫的 Shopline API】
-    GET /v1/orders/{order_id}/tags
-    端點鍵：order_tags
+    - GET /v1/orders/{order_id}/tags
 
     【回傳結構】
     {
@@ -660,8 +662,7 @@ def get_order_action_logs(
     【用途】取得指定訂單的所有操作歷程紀錄，包含狀態變更、人員操作、時間戳記等，適合稽核追蹤。
 
     【呼叫的 Shopline API】
-    GET /v1/orders/{order_id}/action-logs
-    端點鍵：order_action_logs
+    - GET /v1/orders/{order_id}/action-logs
 
     【回傳結構】
     {
@@ -699,8 +700,7 @@ def get_order_transactions(
     【用途】取得指定訂單的所有付款交易紀錄，包含付款金額、交易狀態、付款方式等，適合對帳與財務核查。
 
     【呼叫的 Shopline API】
-    GET /v1/orders/{order_id}/transactions
-    端點鍵：order_transactions
+    - GET /v1/orders/{order_id}/transactions
 
     【回傳結構】
     {

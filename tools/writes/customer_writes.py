@@ -148,6 +148,7 @@ def update_customer_tags(
 
     【呼叫的 Shopline API】
     - PUT /v1/customers/{customer_id}/tags
+    - POST /v1/customers/{customer_id}/tags
 
     【回傳結構】
     dict 含 success: bool, resource_id: str, message: str。

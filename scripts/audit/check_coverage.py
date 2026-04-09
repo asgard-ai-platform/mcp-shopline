@@ -18,6 +18,14 @@ WRITES_DIR = os.path.join(PROJECT_ROOT, "tools", "writes")
 INVENTORY_FILE = os.path.join(PROJECT_ROOT, "reference", "shopline-api-inventory.md")
 
 ENDPOINT_PATTERN = re.compile(r"-\s+(GET|POST|PUT|PATCH|DELETE)\s+(/[\w/{}\-_.]+)")
+PARAM_PATTERN = re.compile(r"\{[^}]+\}")
+
+
+def normalize_endpoint(endpoint):
+    """將 path parameter 名稱統一為 {id}，解決 {customer_id} vs {id} 的比對問題"""
+    method, path = endpoint.split(" ", 1)
+    normalized_path = PARAM_PATTERN.sub("{id}", path)
+    return f"{method} {normalized_path}"
 
 
 def parse_inventory():
@@ -28,7 +36,8 @@ def parse_inventory():
             m = ENDPOINT_PATTERN.search(line)
             if m:
                 method, path = m.group(1), m.group(2)
-                endpoints.add(f"{method} {path}")
+                ep = normalize_endpoint(f"{method} {path}")
+                endpoints.add(ep)
     return endpoints
 
 
@@ -71,7 +80,7 @@ def parse_tool_docstrings():
                     m = ENDPOINT_PATTERN.search(line)
                     if m:
                         method, path = m.group(1), m.group(2)
-                        ep = f"{method} {path}"
+                        ep = normalize_endpoint(f"{method} {path}")
                         covered.add(ep)
                         if ep not in tool_map:
                             tool_map[ep] = []
