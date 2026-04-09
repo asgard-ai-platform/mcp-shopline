@@ -14,23 +14,85 @@ class ShoplineAPIError(Exception):
         super().__init__(f"[{status_code}] {endpoint}: {message}")
 
 
-def api_get(endpoint_key, params=None, path_params=None, retries=3):
-    """發送 GET 請求到 Shopline API，回傳 JSON。含自動重試。"""
+def _api_request(method, endpoint_key, json_body=None, params=None,
+                 path_params=None, retries=3, retry_on_client_error=True):
+    """
+    內部共用 HTTP 請求函數。不直接由 tool 呼叫。
+
+    retry_on_client_error:
+      - True (GET): 任何非 200 都重試（保持既有行為）
+      - False (POST/PUT/PATCH/DELETE): 4xx 直接拋錯不重試，僅 5xx/網路層重試
+    """
     path_params = path_params or {}
     url = get_url(endpoint_key, **path_params)
     headers = get_headers()
 
     for attempt in range(retries):
         try:
-            resp = requests.get(url, headers=headers, params=params, timeout=60)
-            if resp.status_code != 200:
+            resp = requests.request(
+                method, url, headers=headers, params=params,
+                json=json_body, timeout=60
+            )
+            if resp.status_code in (200, 201):
+                return resp.json()
+            if resp.status_code == 204:
+                return {}  # No Content（常見於 DELETE 回應）
+
+            is_client_error = 400 <= resp.status_code < 500
+            is_server_error = resp.status_code >= 500
+
+            if is_client_error and not retry_on_client_error:
                 raise ShoplineAPIError(resp.status_code, resp.text[:500], url)
-            return resp.json()
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+
+            if is_server_error or (is_client_error and retry_on_client_error):
+                if attempt < retries - 1:
+                    time.sleep(2 ** attempt)
+                    continue
+                raise ShoplineAPIError(resp.status_code, resp.text[:500], url)
+
+            # 其他非預期狀態碼
+            raise ShoplineAPIError(resp.status_code, resp.text[:500], url)
+
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
             if attempt < retries - 1:
-                time.sleep(2 ** attempt)  # 1s, 2s, 4s
+                time.sleep(2 ** attempt)
                 continue
             raise
+
+
+def api_get(endpoint_key, params=None, path_params=None, retries=3):
+    """發送 GET 請求到 Shopline API，回傳 JSON。含自動重試。"""
+    return _api_request("GET", endpoint_key, params=params,
+                        path_params=path_params, retries=retries,
+                        retry_on_client_error=True)
+
+
+def api_post(endpoint_key, json_body=None, params=None, path_params=None, retries=3):
+    """發送 POST 請求到 Shopline API。4xx 不重試。"""
+    return _api_request("POST", endpoint_key, json_body=json_body,
+                        params=params, path_params=path_params, retries=retries,
+                        retry_on_client_error=False)
+
+
+def api_put(endpoint_key, json_body=None, params=None, path_params=None, retries=3):
+    """發送 PUT 請求到 Shopline API。4xx 不重試。"""
+    return _api_request("PUT", endpoint_key, json_body=json_body,
+                        params=params, path_params=path_params, retries=retries,
+                        retry_on_client_error=False)
+
+
+def api_patch(endpoint_key, json_body=None, params=None, path_params=None, retries=3):
+    """發送 PATCH 請求到 Shopline API。4xx 不重試。"""
+    return _api_request("PATCH", endpoint_key, json_body=json_body,
+                        params=params, path_params=path_params, retries=retries,
+                        retry_on_client_error=False)
+
+
+def api_delete(endpoint_key, params=None, path_params=None, retries=3):
+    """發送 DELETE 請求到 Shopline API。4xx 不重試。"""
+    return _api_request("DELETE", endpoint_key, params=params,
+                        path_params=path_params, retries=retries,
+                        retry_on_client_error=False)
 
 
 def fetch_all_pages(endpoint_key, params=None, path_params=None, max_pages=None):
