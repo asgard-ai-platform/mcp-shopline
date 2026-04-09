@@ -10,7 +10,7 @@ from pydantic import Field
 
 from app import mcp
 from tools.base_tool import (
-    api_get, fetch_all_pages, money_to_float, get_translation
+    api_get, fetch_all_pages, money_to_float, get_translation, resolve_field
 )
 from collections import defaultdict
 
@@ -25,6 +25,8 @@ def get_product_list(
     max_results: int = Field(default=50, description="最多回傳筆數"),
 ) -> dict:
     """取得商品列表，含 SKU 變體、價格、品牌、庫存數量等資訊。"""
+    keyword = resolve_field(keyword)
+    brand = resolve_field(brand)
     products = fetch_all_pages("products", max_pages=10)
 
     if keyword:
@@ -134,6 +136,7 @@ def get_inventory_overview(
     brand: Optional[str] = Field(default=None, description="品牌篩選"),
 ) -> dict:
     """取得全商品庫存總覽：總庫存數量、庫存品項數、缺貨品項數等。從商品 variations 的 quantity 欄位計算。"""
+    brand = resolve_field(brand)
     products = fetch_all_pages("products", max_pages=10)
 
     if brand:

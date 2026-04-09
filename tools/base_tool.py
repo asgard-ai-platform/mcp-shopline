@@ -3,7 +3,16 @@ Shopline API 基底工具 — 認證、分頁、錯誤處理共用邏輯
 """
 import requests
 import time
+from pydantic.fields import FieldInfo
 from config.settings import get_headers, get_url, DEFAULT_PER_PAGE
+
+
+def resolve_field(value):
+    """解決直接呼叫 @mcp.tool() 函數時 Field(default=...) 回傳 FieldInfo 的問題。
+    MCP 協議呼叫會經過 pydantic 驗證自動解析，但測試時直接呼叫函數則不會。"""
+    if isinstance(value, FieldInfo):
+        return value.default
+    return value
 
 
 class ShoplineAPIError(Exception):

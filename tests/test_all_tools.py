@@ -105,10 +105,15 @@ if __name__ == "__main__":
     # 取一筆訂單 ID 來測試 detail
     from tools.base_tool import api_get
     first_order = api_get("orders", params={"per_page": 1, "status": "completed"})
-    oid = first_order["items"][0]["id"]
-    results["get_order_detail"] = run_test(
-        "get_order_detail", get_order_detail, order_id=oid
-    )
+    order_items = first_order.get("items", [])
+    if order_items:
+        oid = order_items[0]["id"]
+        results["get_order_detail"] = run_test(
+            "get_order_detail", get_order_detail, order_id=oid
+        )
+    else:
+        print("\n⚠️ 無訂單資料可測試 get_order_detail")
+        results["get_order_detail"] = False
 
     # 驗證 query_orders → get_order_detail 的完整串接流程
     # (regression: query_orders 曾未回傳 id，導致只能傳 order_number 給 detail，API 回 410)

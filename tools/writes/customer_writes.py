@@ -9,7 +9,7 @@ from typing import Optional, List
 from pydantic import Field
 
 from app import mcp
-from tools.base_tool import api_post, api_put, api_delete
+from tools.base_tool import api_post, api_put, api_delete, resolve_field
 
 
 @mcp.tool()
@@ -36,6 +36,9 @@ def create_customer(
     - 在商店客戶列表中新增一筆客戶
     - 如果 email 或 phone 已存在，可能會失敗（Shopline 可能不允許重複）
     """
+    email, phone, gender, birthday, tags = (
+        resolve_field(v) for v in (email, phone, gender, birthday, tags)
+    )
     body = {"name": name}
     if email:
         body["email"] = email

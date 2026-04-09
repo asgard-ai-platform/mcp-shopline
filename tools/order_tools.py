@@ -11,7 +11,7 @@ from pydantic import Field
 from app import mcp
 from tools.base_tool import (
     api_get, fetch_all_pages, fetch_all_pages_by_date_segments,
-    money_to_float, get_translation, ShoplineAPIError
+    money_to_float, get_translation, ShoplineAPIError, resolve_field
 )
 from collections import Counter, defaultdict
 from datetime import datetime
@@ -34,6 +34,8 @@ def query_orders(
     max_results: int = Field(default=100, description="最多回傳筆數"),
 ) -> dict:
     """依時間區間、訂單狀態、通路來源查詢訂單列表。回傳精簡的訂單摘要。"""
+    status = resolve_field(status)
+    store_name = resolve_field(store_name)
     params = {
         "created_after": f"{start_date}T00:00:00Z",
         "created_before": f"{end_date}T23:59:59Z",
@@ -102,6 +104,7 @@ def get_sales_summary(
     store_name: Optional[str] = Field(default=None, description="門市名稱篩選"),
 ) -> dict:
     """取得指定時間區間的銷售摘要：營業額、訂單數、客單價、件單價、折扣總額等核心指標。支援依通路/門市篩選。"""
+    store_name = resolve_field(store_name)
     params = {
         "created_after": f"{start_date}T00:00:00Z",
         "created_before": f"{end_date}T23:59:59Z",
