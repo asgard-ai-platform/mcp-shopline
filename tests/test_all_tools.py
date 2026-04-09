@@ -31,6 +31,15 @@ import asyncio
 
 def run_test(name, fn, **kwargs):
     """執行一個 Tool 並印出結果摘要"""
+    # 直接呼叫 @mcp.tool() 函數時，未傳入的 Optional 參數預設值為 FieldInfo 物件
+    # 需自動解析為實際預設值，避免 FieldInfo 被當成字串使用
+    import inspect
+    from pydantic.fields import FieldInfo
+    sig = inspect.signature(fn)
+    for param_name, param in sig.parameters.items():
+        if param_name not in kwargs and isinstance(param.default, FieldInfo):
+            kwargs[param_name] = param.default.default
+
     print(f"\n{'─' * 50}")
     print(f"🔧 {name}")
     print(f"   params: {kwargs}")
