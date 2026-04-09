@@ -10,7 +10,7 @@ from pydantic import Field
 
 from app import mcp
 from tools.base_tool import (
-    api_get, fetch_all_pages, money_to_float, get_translation
+    api_get, fetch_all_pages, money_to_float, get_translation, resolve_field
 )
 from collections import defaultdict
 
@@ -25,6 +25,8 @@ def get_product_list(
     max_results: int = Field(default=50, description="最多回傳筆數"),
 ) -> dict:
     """取得商品列表，含 SKU 變體、價格、品牌、庫存數量等資訊。"""
+    keyword = resolve_field(keyword)
+    brand = resolve_field(brand)
     products = fetch_all_pages("products", max_pages=10)
 
     if keyword:
@@ -134,6 +136,7 @@ def get_inventory_overview(
     brand: Optional[str] = Field(default=None, description="品牌篩選"),
 ) -> dict:
     """取得全商品庫存總覽：總庫存數量、庫存品項數、缺貨品項數等。從商品 variations 的 quantity 欄位計算。"""
+    brand = resolve_field(brand)
     products = fetch_all_pages("products", max_pages=10)
 
     if brand:
@@ -350,4 +353,115 @@ def get_stock_by_warehouse(
         "total_variants": len(product_details),
         "warehouse_summary": {k: v for k, v in sorted_warehouses},
         "details": product_details[:100],  # 限制回傳筆數
+    }
+
+
+# ============================================================
+# Tool 7: get_locked_inventory — 鎖定（預留）庫存查詢
+# ============================================================
+@mcp.tool()
+def get_locked_inventory() -> dict:
+    """
+    【用途】
+    取得目前被鎖定（預留）的庫存商品清單，協助分析哪些 SKU 有待出貨的預留數量。
+
+    【呼叫的 Shopline API】
+    GET /v1/products/locked-inventory
+
+    【回傳結構】
+    - total: 鎖定庫存的 SKU 總筆數
+    - items: 每筆含 product_title、sku、locked_quantity
+    """
+    data = api_get("products_locked_inventory")
+    raw_items = data.get("items", []) if isinstance(data, dict) else []
+
+    items = []
+    for item in raw_items:
+        items.append({
+            "product_title": get_translation(item.get("title_translations")),
+            "sku": item.get("sku"),
+            "locked_quantity": item.get("locked_quantity", 0),
+        })
+
+    return {
+        "total": len(items),
+        "items": items,
+    }
+
+
+# ============================================================
+# Tool 8: list_purchase_orders — POS 採購單列表
+# ============================================================
+@mcp.tool()
+def list_purchase_orders(
+    max_results: int = Field(default=50, description="最多回傳筆數"),
+) -> dict:
+    """
+    【用途】
+    取得 POS 採購單列表，用於了解進貨狀況與採購歷史。
+
+    【呼叫的 Shopline API】
+    GET /v1/pos/purchase_orders（分頁）
+
+    【回傳結構】
+    - total_found: 查詢到的採購單總數
+    - returned: 實際回傳筆數
+    - purchase_orders: 每筆含 id、status、total、created_at
+    """
+    max_pages = max(1, (max_results + 49) // 50)
+    orders = fetch_all_pages("purchase_orders", max_pages=max_pages)
+
+    results = []
+    for o in orders[:max_results]:
+        results.append({
+            "id": o.get("id"),
+            "status": o.get("status"),
+            "total": money_to_float(o.get("total")),
+            "created_at": o.get("created_at"),
+        })
+
+    return {
+        "total_found": len(orders),
+        "returned": len(results),
+        "purchase_orders": results,
+    }
+
+
+# ============================================================
+# Tool 9: get_purchase_order_detail — POS 採購單明細
+# ============================================================
+@mcp.tool()
+def get_purchase_order_detail(
+    purchase_order_id: str = Field(description="採購單 ID"),
+) -> dict:
+    """
+    【用途】
+    取得單一 POS 採購單的完整明細，含採購品項、數量、金額等資訊。
+
+    【呼叫的 Shopline API】
+    GET /v1/pos/purchase_orders/{purchase_order_id}
+
+    【回傳結構】
+    - id、status、created_at、total
+    - items: 每筆含 product_title、sku、quantity、unit_cost
+    """
+    data = api_get("purchase_order_detail", path_params={"purchase_order_id": purchase_order_id})
+
+    raw_items = data.get("items", []) if isinstance(data, dict) else []
+    items = []
+    for item in raw_items:
+        items.append({
+            "product_title": get_translation(item.get("title_translations")),
+            "sku": item.get("sku"),
+            "quantity": item.get("quantity", 0),
+            "unit_cost": money_to_float(item.get("unit_cost")),
+        })
+
+    return {
+        "id": data.get("id"),
+        "status": data.get("status"),
+        "created_at": data.get("created_at"),
+        "total": money_to_float(data.get("total")),
+        "items_count": len(items),
+        "items": items,
     }

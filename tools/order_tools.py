@@ -11,7 +11,7 @@ from pydantic import Field
 from app import mcp
 from tools.base_tool import (
     api_get, fetch_all_pages, fetch_all_pages_by_date_segments,
-    money_to_float, get_translation, ShoplineAPIError
+    money_to_float, get_translation, ShoplineAPIError, resolve_field
 )
 from collections import Counter, defaultdict
 from datetime import datetime
@@ -34,6 +34,8 @@ def query_orders(
     max_results: int = Field(default=100, description="最多回傳筆數"),
 ) -> dict:
     """依時間區間、訂單狀態、通路來源查詢訂單列表。回傳精簡的訂單摘要。"""
+    status = resolve_field(status)
+    store_name = resolve_field(store_name)
     params = {
         "created_after": f"{start_date}T00:00:00Z",
         "created_before": f"{end_date}T23:59:59Z",
@@ -102,6 +104,7 @@ def get_sales_summary(
     store_name: Optional[str] = Field(default=None, description="門市名稱篩選"),
 ) -> dict:
     """取得指定時間區間的銷售摘要：營業額、訂單數、客單價、件單價、折扣總額等核心指標。支援依通路/門市篩選。"""
+    store_name = resolve_field(store_name)
     params = {
         "created_after": f"{start_date}T00:00:00Z",
         "created_before": f"{end_date}T23:59:59Z",
@@ -502,4 +505,235 @@ def get_refund_summary(
         "total_refund_amount": round(total_refund, 2),
         "status_breakdown": dict(status_breakdown.most_common()),
         "top_refund_items": sorted_items[:20],
+    }
+
+
+# ============================================================
+# Tool 8: get_archived_orders — 已封存訂單查詢
+# ============================================================
+@mcp.tool()
+def get_archived_orders(
+    start_date: str = Field(description="起始日期 YYYY-MM-DD"),
+    end_date: str = Field(description="結束日期 YYYY-MM-DD"),
+    max_results: int = Field(default=100, description="最多回傳筆數"),
+) -> dict:
+    """
+    【用途】查詢已封存（archived）的歷史訂單列表，適合調閱長期歸檔的舊訂單資料。
+
+    【呼叫的 Shopline API】
+    GET /v1/orders/archived
+    端點鍵：orders_archived
+
+    【回傳結構】
+    {
+      "total_found": int,        # 符合條件的總筆數
+      "returned": int,           # 實際回傳筆數
+      "orders": [                # 精簡訂單列表
+        {
+          "id": str,
+          "order_number": str,
+          "status": str,
+          "channel": str,        # "POS" 或 "線上"
+          "store_name": str,
+          "total": float,
+          "subtotal": float,
+          "discount": float,
+          "payment_type": str,
+          "payment_status": str,
+          "delivery_type": str,
+          "delivery_status": str,
+          "customer_name": str,
+          "items_count": int,
+          "created_at": str,
+        }
+      ]
+    }
+    """
+    params = {
+        "created_after": f"{start_date}T00:00:00Z",
+        "created_before": f"{end_date}T23:59:59Z",
+    }
+
+    orders = fetch_all_pages("orders_archived", params=params, max_pages=20)
+
+    results = []
+    for o in orders[:max_results]:
+        ch = o.get("channel") or {}
+        ch_name = get_translation(ch.get("created_by_channel_name")) if ch else ""
+        payment = o.get("order_payment") or {}
+        delivery = o.get("order_delivery") or {}
+
+        results.append({
+            "id": o.get("id"),
+            "order_number": o.get("order_number"),
+            "status": o.get("status"),
+            "channel": "POS" if o.get("created_from") == "pos" else "線上",
+            "store_name": ch_name or None,
+            "total": money_to_float(o.get("total")),
+            "subtotal": money_to_float(o.get("subtotal")),
+            "discount": money_to_float(o.get("order_discount")),
+            "payment_type": get_translation(payment.get("name_translations")),
+            "payment_status": payment.get("status"),
+            "delivery_type": get_translation(delivery.get("name_translations")),
+            "delivery_status": delivery.get("delivery_status"),
+            "customer_name": o.get("customer_name"),
+            "items_count": len(o.get("subtotal_items", [])),
+            "created_at": o.get("created_at"),
+        })
+
+    return {
+        "total_found": len(orders),
+        "returned": len(results),
+        "orders": results,
+    }
+
+
+# ============================================================
+# Tool 9: get_order_labels — 訂單配送標籤
+# ============================================================
+@mcp.tool()
+def get_order_labels(
+    order_id: str = Field(description="訂單內部 ID（由 query_orders 回傳的 id 欄位，非 order_number）"),
+) -> dict:
+    """
+    【用途】取得指定訂單的配送標籤資訊，可用於列印物流面單或查詢寄件單號。
+
+    【呼叫的 Shopline API】
+    GET /v1/orders/{order_id}/labels
+    端點鍵：order_labels
+
+    【回傳結構】
+    API 原始回應，通常包含：
+    {
+      "labels": [
+        {
+          "tracking_number": str,  # 物流追蹤號碼
+          "carrier": str,          # 物流商名稱
+          "label_url": str,        # 標籤列印 URL
+          ...
+        }
+      ]
+    }
+    """
+    data = api_get("order_labels", path_params={"order_id": order_id})
+    return data
+
+
+# ============================================================
+# Tool 10: get_order_tags — 訂單標籤
+# ============================================================
+@mcp.tool()
+def get_order_tags(
+    order_id: str = Field(description="訂單內部 ID（由 query_orders 回傳的 id 欄位，非 order_number）"),
+) -> dict:
+    """
+    【用途】取得指定訂單上附加的所有標籤，可用於分類管理或篩選特殊訂單。
+
+    【呼叫的 Shopline API】
+    GET /v1/orders/{order_id}/tags
+    端點鍵：order_tags
+
+    【回傳結構】
+    {
+      "order_id": str,   # 查詢的訂單 ID
+      "tags": list,      # 標籤列表（字串陣列）
+    }
+    """
+    data = api_get("order_tags", path_params={"order_id": order_id})
+
+    tags = data if isinstance(data, list) else data.get("tags", data.get("items", []))
+
+    return {
+        "order_id": order_id,
+        "tags": tags,
+    }
+
+
+# ============================================================
+# Tool 11: get_order_action_logs — 訂單操作歷程
+# ============================================================
+@mcp.tool()
+def get_order_action_logs(
+    order_id: str = Field(description="訂單內部 ID（由 query_orders 回傳的 id 欄位，非 order_number）"),
+) -> dict:
+    """
+    【用途】取得指定訂單的所有操作歷程紀錄，包含狀態變更、人員操作、時間戳記等，適合稽核追蹤。
+
+    【呼叫的 Shopline API】
+    GET /v1/orders/{order_id}/action-logs
+    端點鍵：order_action_logs
+
+    【回傳結構】
+    {
+      "order_id": str,    # 查詢的訂單 ID
+      "total": int,       # 歷程總筆數
+      "logs": [           # 操作歷程列表
+        {
+          "action": str,      # 操作類型（如 status_changed, payment_updated）
+          "operator": str,    # 操作人員
+          "created_at": str,  # 操作時間
+          ...                 # 其他欄位依 API 回應而定
+        }
+      ]
+    }
+    """
+    data = api_get("order_action_logs", path_params={"order_id": order_id})
+
+    logs = data if isinstance(data, list) else data.get("logs", data.get("items", []))
+
+    return {
+        "order_id": order_id,
+        "total": len(logs),
+        "logs": logs,
+    }
+
+
+# ============================================================
+# Tool 12: get_order_transactions — 訂單付款交易紀錄
+# ============================================================
+@mcp.tool()
+def get_order_transactions(
+    order_id: str = Field(description="訂單內部 ID（由 query_orders 回傳的 id 欄位，非 order_number）"),
+) -> dict:
+    """
+    【用途】取得指定訂單的所有付款交易紀錄，包含付款金額、交易狀態、付款方式等，適合對帳與財務核查。
+
+    【呼叫的 Shopline API】
+    GET /v1/orders/{order_id}/transactions
+    端點鍵：order_transactions
+
+    【回傳結構】
+    {
+      "order_id": str,          # 查詢的訂單 ID
+      "total": int,             # 交易筆數
+      "transactions": [         # 交易列表
+        {
+          "id": str,            # 交易 ID
+          "kind": str,          # 交易類型（sale, refund, void 等）
+          "status": str,        # 交易狀態
+          "amount": float,      # 交易金額（TWD）
+          "gateway": str,       # 付款閘道
+          "created_at": str,    # 交易時間
+          ...                   # 其他欄位依 API 回應而定
+        }
+      ]
+    }
+    """
+    data = api_get("order_transactions", path_params={"order_id": order_id})
+
+    raw_list = data if isinstance(data, list) else data.get("transactions", data.get("items", []))
+
+    transactions = []
+    for txn in raw_list:
+        entry = dict(txn)
+        # 將金錢物件轉為 float
+        for field in ("amount", "total", "refund_amount"):
+            if field in entry and isinstance(entry[field], dict):
+                entry[field] = money_to_float(entry[field])
+        transactions.append(entry)
+
+    return {
+        "order_id": order_id,
+        "total": len(transactions),
+        "transactions": transactions,
     }
