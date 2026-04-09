@@ -28,7 +28,33 @@ import tools.membership_tier_tools  # noqa: F401
 import tools.member_point_tools   # noqa: F401
 import tools.custom_field_tools   # noqa: F401
 
-# --- Phase 1: Customer domain write tools ---
+# --- Phase 3A: Product/Promotion domain read tools ---
+import tools.category_tools        # noqa: F401
+import tools.promotion_tools       # noqa: F401
+import tools.flash_price_tools     # noqa: F401
+import tools.affiliate_tools       # noqa: F401
+import tools.gift_tools            # noqa: F401
+import tools.addon_product_tools   # noqa: F401
+import tools.subscription_tools    # noqa: F401
+
+# --- Phase 3B: Order extended domain read tools ---
+import tools.return_order_tools    # noqa: F401
+import tools.order_delivery_tools  # noqa: F401
+import tools.conversation_tools    # noqa: F401
+import tools.review_tools          # noqa: F401
+
+# --- Phase 3C: Store settings domain read tools ---
+import tools.merchant_tools        # noqa: F401
+import tools.payment_tools         # noqa: F401
+import tools.delivery_option_tools # noqa: F401
+import tools.channel_tools         # noqa: F401
+import tools.settings_tools        # noqa: F401
+import tools.tax_tools             # noqa: F401
+import tools.staff_tools           # noqa: F401
+import tools.token_tools           # noqa: F401
+import tools.agent_tools           # noqa: F401
+
+# --- Write tools ---
 import tools.writes.customer_writes  # noqa: F401
 
 from app import mcp
