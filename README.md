@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/asgard-ai-platform-mcp-shopline-badge.png)](https://mseep.ai/app/asgard-ai-platform-mcp-shopline)
+
 # MCP Shopline
 
 [![PyPI version](https://img.shields.io/pypi/v/mcp-shopline)](https://pypi.org/project/mcp-shopline/)
